@@ -58,7 +58,7 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import base64
 
-dataset_path = r"C:\\Users\\Dell\\Desktop\\DESKTOP_FOLDER\\FINAL YEAR PROJECT\\qryptify\\datasets\\processed_cleaned_file.csv"
+dataset_path = r"D:\Final year project\QRYPTIFY\qryptify\datasets\processed_cleaned_file.csv"
 df = pd.read_csv(dataset_path, header=None)
 # print(df.head())
 train_data = []
