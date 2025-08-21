@@ -20,10 +20,11 @@ def get_csrf_token(request):
 class LoginAPI(APIView):
 
     def get(self,request):
-        users=User.objects.all()
-        if not users.exists():
+        users_obj=User.objects.all()
+        if not users_obj.exists():
             return Response({"status":False,"message":"No user exists"},status=status.HTTP_404_NOT_FOUND)
-        return Response({"status":True,"message":"Data exists"},status=status.HTTP_200_OK)
+        serializers=UserSerializer(users_obj,many=True)
+        return Response({"status":True,"data":serializers.data},status=status.HTTP_200_OK)
 
     def post(self,request):
         data=request.data
@@ -45,6 +46,13 @@ class LoginAPI(APIView):
             login(request,user)
             return Response({"status":True,"message":"Successfully logged in"},status=status.HTTP_200_OK)
         return Response({"status":False,"message":"Invalid Credentials"},status=status.HTTP_401_UNAUTHORIZED)
+    
+    def delete(self,request):
+        data=request.data
+        email=data.get('email')
+        user=User.objects.filter(email=email)
+        user.delete()
+        return Response({"status":True,"message":"Successfully deleted"})
 
 class SignupAPI(APIView):
 
