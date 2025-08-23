@@ -61,8 +61,8 @@ export default function HelpSection() {
     {
       question: "Can I integrate Qryptify with my existing systems?",
       answer:
-        "Yes, Qryptify offers comprehensive APIs and SDKs for seamless integration with your existing security infrastructure and analysis workflows.",
-    },
+        "No, Qryptify is designed as a standalone platform with its own secure environment. To maintain maximum security and prevent dependency risks, it does not integrate directly with external systems or third-party infrastructures."
+      },
   ];
 
   return (
