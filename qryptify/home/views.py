@@ -30,6 +30,8 @@ class LoginAPI(APIView):
         data=request.data
         email = data.get('email')
         password = data.get('password')
+        print(email,password)
+        print("inside the login api")
 
         if not email or not password:
             return Response(
@@ -46,6 +48,26 @@ class LoginAPI(APIView):
             login(request,user)
             return Response({"status":True,"message":"Successfully logged in"},status=status.HTTP_200_OK)
         return Response({"status":False,"message":"Invalid Credentials"},status=status.HTTP_401_UNAUTHORIZED)
+
+    def patch(self, request):
+        data = request.data
+        email = data.get('email')
+        try:
+            obj = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"status": False, "message": "No user exists"}, status=404)
+        password = data.get('password')
+        if password:
+            obj.set_password(password)  # hashes the password
+            obj.save()
+            return Response({"status": True, "message": "Password updated successfully"})
+        serializer = UserSerializer(obj, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"status": True, "message": "Successfully updated"})
+        
+        return Response({"status": False, "message": serializer.errors}, status=400)
+
     
     def delete(self,request):
         data=request.data
