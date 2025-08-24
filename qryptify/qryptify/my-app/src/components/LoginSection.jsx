@@ -17,36 +17,64 @@ export default function LoginSection() {
   const [apiStatus, setApiStatus] = useState(null);
 
   async function login(){
-  try{
-    const url = "http://localhost:8000/api/login/";
-    const options={
-      method:"POST",
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        email:formData.email,
-        password:formData.password
-      })
-    }
-    const response=await fetch(url,options)
-    if(response.ok){
-      setApiStatus(true)
-    }
-    else{
-      console.log("Error caught in login")
-      setApiStatus(false)
-    }
-  }
-  catch(error){
-    console.log(`Exception caught in login ${error}`)
-    setApiStatus(false)
-  }
-  
+      try{
+        const url = "http://localhost:8000/api/login/";
+        const options={
+          method:"POST",
+          headers:{
+            'Content-Type':'application/json'
+          },
+          body:JSON.stringify({
+            email:formData.email,
+            password:formData.password
+          })
+        }
+        const response=await fetch(url,options)
+        if(response.ok){
+          setApiStatus(true)
+        }
+        else{
+          console.log("Error caught in login")
+          setApiStatus(false)
+        }
+      }
+      catch(error){
+        console.log(`Exception caught in login ${error}`)
+        setApiStatus(false)
+      }
+      
 }
 
  async function signup(){
-  console.log("inside the signup method")
+    try{
+        const url = "http://localhost:8000/api/signup/";
+        const options={
+          method:"POST",
+          headers:{
+            'Content-Type':'application/json'
+          },
+          body:JSON.stringify({
+            first_name:formData.firstName,
+            last_name:formData.lastName,
+            username:formData.username,
+            email:formData.email,
+            password:formData.password
+          })
+        }
+        const response=await fetch(url,options)
+        if(response.ok){
+          setApiStatus(true)
+        }
+        else{
+          console.log("Error caught in login")
+          setApiStatus(false)
+        }
+      }
+      catch(error){
+        console.log(`Exception caught in login ${error}`)
+        setApiStatus(false)
+      }
+      
 }
 
 

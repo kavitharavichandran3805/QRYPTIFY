@@ -58,7 +58,7 @@ class LoginAPI(APIView):
             return Response({"status": False, "message": "No user exists"}, status=404)
         password = data.get('password')
         if password:
-            obj.set_password(password)  # hashes the password
+            obj.set_password(password) 
             obj.save()
             return Response({"status": True, "message": "Password updated successfully"})
         serializer = UserSerializer(obj, data=data, partial=True)
