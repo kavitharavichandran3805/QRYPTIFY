@@ -55,7 +55,7 @@ class LoginAPI(APIView):
         try:
             obj = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response({"status": False, "message": "No user exists"}, status=404)
+            return Response({"status": False, "message": "No user exists"}, status=status.HTTP_404_NOT_FOUND)
         password = data.get('password')
         if password:
             obj.set_password(password) 
@@ -66,7 +66,7 @@ class LoginAPI(APIView):
             serializer.save()
             return Response({"status": True, "message": "Successfully updated"})
         
-        return Response({"status": False, "message": serializer.errors}, status=400)
+        return Response({"status": False, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     
     def delete(self,request):
@@ -86,6 +86,24 @@ class SignupAPI(APIView):
         user=serializers.save()
         login(request,user)
         return Response({"status":True,"message":"Successfully signed in"},status=status.HTTP_201_CREATED)
+    
+class UserDetailsAPI(APIView):
+
+    def get(self,request):
+        if request.user.is_authenticated:
+            user=request.user
+            return Response({
+                'status': True,
+                'user': {
+                    'username': user.username,
+                    'email': user.email,
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'status':False,
+                'message':'User is not authenticated'
+            },status=status.HTTP_401_UNAUTHORIZED)
 
 
 

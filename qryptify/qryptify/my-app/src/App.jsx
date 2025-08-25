@@ -151,51 +151,69 @@
 
 
 
-
-import React, { useState, useEffect } from 'react';
-import Navigation from './components/Navigation.jsx';
-import HeroSection from './components/HeroSection.jsx';
-import AboutSection from './components/AboutSection.jsx';
-import HelpSection from './components/HelpSection.jsx';
-import LoginSection from './components/LoginSection.jsx';
-import HelloWorld from './components/Analysis.jsx';
+import React, { useState, useEffect } from 'react'
+import Navigation from './components/Navigation.jsx'
+import HeroSection from './components/HeroSection.jsx'
+import AboutSection from './components/AboutSection.jsx'
+import HelpSection from './components/HelpSection.jsx'
+import LoginSection from './components/LoginSection.jsx'
+import HelloWorld from './components/Analysis.jsx'
+import { api } from './components/api.js'
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState('home');
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [activeSection, setActiveSection] = useState('home')
+  const [showDashboard, setShowDashboard] = useState(false)
+
+  const handleGetStarted = async () => {
+    try {
+      console.log("inside the handleGetStarted")
+      const result = await api('user-details', 'GET')
+      if (result.status) {
+        setShowDashboard(true)
+      } else {
+        handleNavigate('login')
+      }
+    } catch (error) {
+      console.error('API error:', error)
+      handleNavigate('login')
+    }
+  }
 
   const handleNavigate = (sectionId) => {
-    setActiveSection(sectionId);
-    if (sectionId === "dashboard") {
-      setShowDashboard(true);
-      return;
+    setActiveSection(sectionId)
+    if (sectionId === 'dashboard') {
+      setShowDashboard(true)
+      return
     }
-    setShowDashboard(false);
-    const element = document.getElementById(sectionId);
+    setShowDashboard(false)
+    const element = document.getElementById(sectionId)
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: 'smooth' })
     }
-  };
+  }
 
   useEffect(() => {
-    if (showDashboard) return;
+    if (showDashboard) return
     const handleScroll = () => {
-      const sections = ['home', 'about', 'help', 'login'];
-      const scrollPosition = window.scrollY + 100;
+      const sections = ['home', 'about', 'help', 'login']
+      const scrollPosition = window.scrollY + 100
       for (const sectionId of sections) {
-        const element = document.getElementById(sectionId);
+        const element = document.getElementById(sectionId)
         if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSection(sectionId);
-            break;
+          const { offsetTop, offsetHeight } = element
+          if (
+            scrollPosition >= offsetTop &&
+            scrollPosition < offsetTop + offsetHeight
+          ) {
+            setActiveSection(sectionId)
+            break
           }
         }
       }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [showDashboard]);
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [showDashboard])
 
   return (
     <div className="min-h-screen bg-white">
@@ -204,15 +222,14 @@ export default function Home() {
       ) : (
         <>
           <Navigation activeSection={activeSection} onNavigate={handleNavigate} />
-          <HeroSection onNavigate={handleNavigate} />
+          <HeroSection onNavigate={handleNavigate} onGetStarted={handleGetStarted} />
           <AboutSection />
           <HelpSection />
-          {/* Pass onSuccess callback to trigger dashboard view */}
           <LoginSection onSuccess={() => handleNavigate('dashboard')} />
         </>
       )}
     </div>
-  );
+  )
 }
 
 
