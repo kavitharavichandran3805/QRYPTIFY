@@ -1,6 +1,6 @@
 import pandas as pd
-from Crypto.Cipher import AES
-from Crypto.Cipher import DES
+from Crypto.Cipher import AES,DES,DES3,Blowfish,ARC4
+from Twofish import TwoFish
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad
 import base64
@@ -39,27 +39,57 @@ def encrypt_des_cbc(data: str) -> str:
     ciphertext = cipher.encrypt(padded_data)
     return base64.b64encode(key + cipher.iv + ciphertext).decode()
 
+def encrypt_3des_cbc(data: str) -> str:
+    key=get_random_bytes(24)
+    key=DES3.adjust_key_parity(key)
+    cipher=DES3.new(key,DES3.MODE_CBC)
+    padded_data=pad(data.encode(),DES3.block_size)
+    ciphertext=cipher.encrypt(padded_data)
+    return base64.b64encode(key + cipher.iv + ciphertext).decode()
+
+def encrypt_blowfish_ctr(data: str) -> str:
+    key=get_random_bytes(16)
+    nonce=get_random_bytes(4)
+    cipher=Blowfish.new(key,Blowfish.MODE_CTR,nonce=nonce)
+    ciphertext=cipher.encrypt(data.encode())
+    return base64.b64encode(key + nonce + ciphertext).decode()
+
+def encrypt_twofish_cbc(data: str) -> str:
+    key=get_random_bytes(16)
+    hex_key=key.hex()
+    plain=TwoFish.text_To_Hex(data)
+    mode="CBC"
+    ciphertext=TwoFish.TwoFish_encrypt(plain,hex_key,mode)
+    return base64.b64encode(key + bytes.fromhex(ciphertext)).decode()
+
+def encrypt_rc4(data: str) -> str:
+    key=get_random_bytes(16)
+    cipher=ARC4.new(key)
+    ciphertext=cipher.encrypt(data.encode())
+    return base64.b64encode(key + ciphertext).decode()
+    
+
 def merge_train(df,first_write=False):
     mode='w' if first_write else 'a'
     header=True if first_write else False
-    df.to_csv("train.csv", mode=mode, index=False, header=header)
+    df.to_csv(r"C:\Users\Dell\Desktop\DESKTOP_FOLDER\FINAL YEAR PROJECT\qryptify\datasets\train.csv", mode=mode, index=False, header=header)
 
 def merge_test(df,first_write=False):
     mode='w' if first_write else 'a'
     header=True if first_write else False
-    df.to_csv("test.csv", mode=mode, index=False, header=header)
+    df.to_csv(r"C:\Users\Dell\Desktop\DESKTOP_FOLDER\FINAL YEAR PROJECT\qryptify\datasets\test.csv", mode=mode, index=False, header=header)
 
 for idx, row in df.iterrows():
     row_str = ','.join([str(i) for i in row.values])
 
     try:
-        encrypted_data = encrypt_des_cbc(row_str)
+        encrypted_data = encrypt_twofish_cbc(row_str)
         if idx % 100 == 0:
             print(f"Processed {idx} rows")
         if idx < 1000:
-            train_data.append([encrypted_data, "Symmetric (Block)","Classical", "DES-CBC"])
+            train_data.append([encrypted_data, "Symmetric (Stream)","Classical", "RC4"])
         else:
-            test_data.append([encrypted_data, "Symmetric (Block)","Classical", "DES-CBC"])
+            test_data.append([encrypted_data, "Symmetric (Stream)","Classical", "RC4"])
     except Exception as e:
         print(f"Encryption error on row {idx}: {e}")
 

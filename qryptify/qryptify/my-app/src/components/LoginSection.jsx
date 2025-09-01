@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Shield, Mail, Lock, ArrowRight, User, CheckCircle, XCircle } from 'lucide-react';
+import { Shield, Mail, Lock, ArrowRight, User, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
 import {api} from './api'
 
 export default function LoginSection({ onSuccess }) {
@@ -15,6 +15,7 @@ export default function LoginSection({ onSuccess }) {
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [apiStatus, setApiStatus] = useState(null);
 
   async function login() {
@@ -195,19 +196,27 @@ export default function LoginSection({ onSuccess }) {
                   </div>
                 </div>
 
+                {/* Password Field with Eye Toggle */}
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-gray-700">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
                       id="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"} // 👈 toggle here
                       value={formData.password}
                       onChange={handleChange}
-                      className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="pl-10 pr-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       placeholder="Enter your password"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                    </button>
                   </div>
                 </div>
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom'; // Import Link from react-router-dom for My Account navigation
 import Logo from './Logo'; // Your full animated Logo.jsx component here
 
 // User icon SVG matching your sample (inside a circle user silhouette)
@@ -33,7 +34,7 @@ const Button = ({ variant, children, ...rest }) => (
   </button>
 );
 
-// Simple page URL creator
+// Simple page URL creator (unchanged for Home button)
 const createPageUrl = (page) => (page === 'Home' ? '/' : '/analysis');
 
 // Mock upload file API
@@ -60,24 +61,60 @@ async function ExtractDataFromUploadedFile({ file_url, json_schema }) {
   );
 }
 
-// Header component with animated Logo and adjusted User icon size
-const AppHeader = () => (
-  <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-200">
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="flex items-center justify-between h-16">
-        <Logo />
-        <div className="flex items-center gap-4">
-          <a href={createPageUrl('Home')}>
-            <Button variant="outline">Home</Button>
-          </a>
-          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-            <User className="w-6 h-6" />
+// Updated Header component with dropdown menu
+const AppHeader = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    alert('Logged out successfully');
+    setMenuOpen(false);
+  };
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex items-center justify-between h-16">
+          <Logo />
+          <div className="flex items-center gap-4 relative">
+            {/* Home button remains unchanged as an anchor tag */}
+            <a href={createPageUrl('Home')}>
+              <Button variant="outline">Home</Button>
+            </a>
+
+            {/* User Icon */}
+            <div
+              className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer"
+              onClick={() => setMenuOpen((prev) => !prev)}
+            >
+              <User className="w-6 h-6" />
+            </div>
+
+            {/* Dropdown Menu */}
+            {menuOpen && (
+              <div className="absolute right-0 top-12 w-40 bg-white border border-gray-200 rounded-lg shadow-lg">
+                {/* My Account now uses React Router Link for SPA navigation */}
+                <Link
+                  to="/account"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  My Account
+                </Link>
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
-  </header>
-);
+    </header>
+  );
+};
+
 
 const FileUploadBox = ({ onFileSelect, isLoading }) => {
   const handleFileChange = (ev) => {
@@ -211,6 +248,7 @@ export default function AnalysisPage() {
     setIsLoading(true);
     setAnalysisResult(null);
     setError(null);
+
     try {
       const { file_url } = await UploadFile({ file });
       const schema = {
