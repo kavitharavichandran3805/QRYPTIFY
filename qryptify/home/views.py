@@ -86,6 +86,15 @@ class SignupAPI(APIView):
         user=serializers.save()
         login(request,user)
         return Response({"status":True,"message":"Successfully signed in"},status=status.HTTP_201_CREATED)
+class LogoutAPI(APIView):
+
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return Response({"status": False, "message": "No user was logged in"})
+        logout(request)
+        return Response({"status": True, "message": "Successfully logged out"})
+
     
 class UserDetailsAPI(APIView):
 

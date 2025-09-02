@@ -83,6 +83,23 @@ function HomePage() {
 }
 
 export default function App() {
+  useEffect(()=>{
+    const fetchCSRF= async()=>{
+      try{
+        const result=await api('csrf-token',"GET")
+        if(result.token){
+        console.log("CSRF token set")
+        }
+        else{
+          console.log("Error in setting up csrf token")
+        }
+      }
+      catch(err){
+        console.log("Failed to set csrf token")
+      }
+    }
+    fetchCSRF()
+  },[])
   return (
     <Router>
       <Routes>

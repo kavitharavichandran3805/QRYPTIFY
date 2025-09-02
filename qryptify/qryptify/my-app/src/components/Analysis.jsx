@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom'; // Import Link from react-router-dom for My Account navigation
 import Logo from './Logo'; // Your full animated Logo.jsx component here
+import {api} from './api'
 
 // User icon SVG matching your sample (inside a circle user silhouette)
 const User = ({ className = 'w-8 h-8' }) => (
@@ -65,8 +66,19 @@ async function ExtractDataFromUploadedFile({ file_url, json_schema }) {
 const AppHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    alert('Logged out successfully');
+  const handleLogout = async () => {
+    try{
+      const result=await api('logout',"GET")
+      if(result.status){
+        alert('Logged out successfully');
+      }
+      else{
+        alert('Error in logging out')
+      }
+    }
+    catch(err){
+      alert("Failed to logout")
+    }
     setMenuOpen(false);
   };
 

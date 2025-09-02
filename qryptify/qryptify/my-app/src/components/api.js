@@ -1,13 +1,19 @@
+import { getCookie } from "./cookies";
+
 export async function api(endpoint,method,body=null){
   try{
       console.log("inside the api function")
+      const csrfToken = getCookie('csrftoken');
       const url = 'http://localhost:8000/api/' + endpoint + "/";
       const options={
         method:method,
         headers:{
-          'Content-Type':'application/json'
+          'Content-Type':'application/json',
         },
         credentials:'include'
+      }
+      if(method!="GET"){
+        options.headers["X-CSRFToken"]=csrfToken
       }
       if(body!==null){
         options.body=JSON.stringify(body)
