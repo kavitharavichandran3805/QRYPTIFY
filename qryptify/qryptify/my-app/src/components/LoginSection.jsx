@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Shield, Mail, Lock, ArrowRight, User, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
 import {api} from './api'
+import { AuthContext } from '../AuthContext.jsx';
 
 export default function LoginSection({ onSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -17,11 +18,19 @@ export default function LoginSection({ onSuccess }) {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [apiStatus, setApiStatus] = useState(null);
+  const [rememberMe, setRememberMe] = useState(false);
+  const { setAccessToken } = useContext(AuthContext);
 
   async function login() {
     try {
-      const result=await api("login","POST",{email:formData.email,password:formData.password})
+      const result=await api("login","POST",{
+        email:formData.email,
+        password:formData.password,
+        rememberMe:rememberMe
+      }
+      )
       if (result.status) {
+        setAccessToken(result.access)
         setApiStatus(true);
         setShowPopup(true);
         setTimeout(() => {
@@ -47,10 +56,12 @@ export default function LoginSection({ onSuccess }) {
           last_name: formData.lastName,
           username: formData.username,
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          rememberMe:rememberMe
       })
       
       if (result.status) {
+        setAccessToken(result.access);
         setApiStatus(true);
         setShowPopup(true);
         setTimeout(() => {
@@ -222,7 +233,8 @@ export default function LoginSection({ onSuccess }) {
 
                 <div className="flex items-center justify-between">
                   <label className="flex items-center">
-                    <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <input type="checkbox" checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                     <span className="ml-2 text-sm text-gray-600">Remember me</span>
                   </label>
                   <button type="button" className="text-sm text-blue-600 hover:text-blue-700">
@@ -299,3 +311,4 @@ export default function LoginSection({ onSuccess }) {
     </section>
   );
 }
+

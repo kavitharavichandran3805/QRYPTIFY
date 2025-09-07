@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import { Button } from '../components/ui/button';
 import { Menu, X } from 'lucide-react';
 import Logo from './Logo';
+import {api} from './api.js';
 
 export default function Navigation({ activeSection, onNavigate }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navItems = [
     { id: 'home', label: 'Home' },
@@ -16,6 +19,22 @@ export default function Navigation({ activeSection, onNavigate }) {
     onNavigate(sectionId);
     setIsMobileMenuOpen(false);
   };
+
+
+  const handleLoginClick=async()=>{
+    try {
+          console.log("inside the handleLoginClick")
+          const result = await api('user-details', 'GET')
+          if (result.status) {
+            navigate('/analysis')
+          } else {
+            handleNavigate('login')
+          }
+        } catch (error) {
+          console.error('API error:', error)
+          handleNavigate('login')
+        }
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200">
@@ -38,7 +57,7 @@ export default function Navigation({ activeSection, onNavigate }) {
             ))}
             <Button 
               className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white px-6 shadow-lg"
-              onClick={() => handleNavClick('login')}
+              onClick={() => handleLoginClick()}
             >
               Login
             </Button>
@@ -68,7 +87,7 @@ export default function Navigation({ activeSection, onNavigate }) {
             <div className="px-4 pt-2">
               <Button 
                 className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-lg"
-                onClick={() => handleNavClick('login')}
+                onClick={() => handleLoginClick()}
               >
                 Login
               </Button>

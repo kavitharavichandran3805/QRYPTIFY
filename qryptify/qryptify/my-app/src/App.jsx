@@ -10,6 +10,7 @@ import MyAccount from './components/MyAccount.jsx'
 import HelloWorld from './components/Analysis.jsx'
 import { api } from './components/api.js'
 
+
 function HomePage() {
   const [activeSection, setActiveSection] = useState('home')
   const [showDashboard, setShowDashboard] = useState(false)

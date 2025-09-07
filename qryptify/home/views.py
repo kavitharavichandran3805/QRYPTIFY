@@ -13,41 +13,67 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
-# from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken,TokenError
+from datetime import timedelta
+from rest_framework.permissions import AllowAny
+
 
 def get_csrf_token(request):
-    return JsonResponse({"token":get_token(request)})
+    print("inside the get_csrf_token")
+    return JsonResponse({"token": get_token(request)}) 
+
 class LoginAPI(APIView):
 
-    def get(self,request):
-        users_obj=User.objects.all()
+    permission_classes = [AllowAny]
+    def get(self, request):
+        users_obj = User.objects.all()
         if not users_obj.exists():
-            return Response({"status":False,"message":"No user exists"},status=status.HTTP_404_NOT_FOUND)
-        serializers=UserSerializer(users_obj,many=True)
-        return Response({"status":True,"data":serializers.data},status=status.HTTP_200_OK)
+            return Response({"status": False, "message": "No user exists"}, status=status.HTTP_404_NOT_FOUND)
+        serializers = UserSerializer(users_obj, many=True)
+        return Response({"status": True, "data": serializers.data}, status=status.HTTP_200_OK)
 
-    def post(self,request):
-        data=request.data
+    def post(self, request):
+        data = request.data
         email = data.get('email')
         password = data.get('password')
-        print(email,password)
-        print("inside the login api")
+        remember_me = data.get('rememberMe', False)
 
         if not email or not password:
             return Response(
                 {"status": False, "message": "Email and password are required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         try:
-            user=User.objects.get(email=email)
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response({"status":False,"message":"User does not exits"},status=status.HTTP_404_NOT_FOUND)
-        user=authenticate(username=user.username,password=password)
-        if user is not None:
-            login(request,user)
-            return Response({"status":True,"message":"Successfully logged in"},status=status.HTTP_200_OK)
-        return Response({"status":False,"message":"Invalid Credentials"},status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"status": False, "message": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        user = authenticate(username=user.username, password=password)
+        if not user:
+            return Response({"status": False, "message": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        refresh_token = RefreshToken.for_user(user)
+        access_token = str(refresh_token.access_token)
+        if remember_me:
+            print("remember me is checked")
+        else:
+            print("remember me is not checked")
+
+        cookie_max_age = 7 * 24 * 60 * 60 if remember_me else 24 * 60 * 60
+
+        res = Response({
+            "status": True,
+            "message": "Successfully logged in",
+            "access": access_token
+        }, status=status.HTTP_200_OK)
+        res.set_cookie(
+            key='refresh',
+            value=str(refresh_token),
+            httponly=True,
+            secure=False,
+            samesite="Strict",
+            max_age=cookie_max_age
+        )
+        return res
 
     def patch(self, request):
         data = request.data
@@ -58,61 +84,105 @@ class LoginAPI(APIView):
             return Response({"status": False, "message": "No user exists"}, status=status.HTTP_404_NOT_FOUND)
         password = data.get('password')
         if password:
-            obj.set_password(password) 
+            obj.set_password(password)
             obj.save()
             return Response({"status": True, "message": "Password updated successfully"})
         serializer = UserSerializer(obj, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({"status": True, "message": "Successfully updated"})
-        
         return Response({"status": False, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-    
-    def delete(self,request):
-        data=request.data
-        email=data.get('email')
-        user=User.objects.filter(email=email)
+    def delete(self, request):
+        data = request.data
+        email = data.get('email')
+        user = User.objects.filter(email=email)
         user.delete()
-        return Response({"status":True,"message":"Successfully deleted"})
+        return Response({"status": True, "message": "Successfully deleted"})
 
 class SignupAPI(APIView):
 
-    def post(self,request):
-        data=request.data
-        serializers=UserSerializer(data=data)
-        if not serializers.is_valid():
-            return Response({"status":False,"message":serializers.errors},status=status.HTTP_400_BAD_REQUEST)
-        user=serializers.save()
-        login(request,user)
-        return Response({"status":True,"message":"Successfully signed in"},status=status.HTTP_201_CREATED)
+    permission_classes = [AllowAny]
+    def post(self, request):
+        data = request.data.copy()
+        remember_me = data.pop('rememberMe', False)
+        serializer = UserSerializer(data=data)
+        if not serializer.is_valid():
+            return Response({"status": False, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        user = serializer.save()
+        refresh_token = RefreshToken.for_user(user)
+        access_token = str(refresh_token.access_token)
+
+        cookie_max_age = 7 * 24 * 60 * 60 if remember_me else 24 * 60 * 60
+
+        res = Response({
+            "status": True,
+            "message": "Successfully signed up",
+            "access": access_token
+        }, status=status.HTTP_200_OK)
+        res.set_cookie(
+            key='refresh',
+            value=str(refresh_token),
+            httponly=True,
+            secure=False,
+            samesite="Strict",
+            max_age=cookie_max_age
+        )
+        return res
+
 class LogoutAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        print(request.user)
+        res = Response({"status": True, "message": "Successfully logged out"})
+        res.delete_cookie('refresh')
+        return res
+
+class UserDetailsAPI(APIView):
 
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        if not request.user.is_authenticated:
-            return Response({"status": False, "message": "No user was logged in"})
-        logout(request)
-        return Response({"status": True, "message": "Successfully logged out"})
+        auth_header = request.headers.get("Authorization")
 
-    
-class UserDetailsAPI(APIView):
+        print("Authorization header:", auth_header)
+        # user = request.user
+        # return Response({
+        #     'status': True,
+        #     'user': {
+        #         'username': user.username,
+        #         'email': user.email,
+        #     }
+        # }, status=status.HTTP_200_OK)
+        refresh = request.COOKIES.get("refresh")
+        if not refresh:
+            return Response({"status": False, "message": "Not logged in"}, status=401)
 
-    def get(self,request):
-        if request.user.is_authenticated:
-            user=request.user
+        try:
+            refresh_token = RefreshToken(refresh)
+            user = User.objects.get(id=refresh_token['user_id'])
             return Response({
-                'status': True,
-                'user': {
-                    'username': user.username,
-                    'email': user.email,
+                "status": True,
+                "user": {
+                    "username": user.username,
+                    "email": user.email,
                 }
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({
-                'status':False,
-                'message':'User is not authenticated'
-            },status=status.HTTP_401_UNAUTHORIZED)
+            })
+        except Exception:
+            return Response({"status": False, "message": "Invalid refresh"}, status=401)
 
+class RefreshTokenAPI(APIView):
 
+    permission_classes = [AllowAny]
 
+    def get(self, request):
+        refresh = request.COOKIES.get('refresh')
+        if not refresh:
+            return Response({"status": False, "message": "Refresh token expired"},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            refresh_token = RefreshToken(refresh)
+            new_access = str(refresh_token.access_token) 
+            return Response({"status": True, "access": new_access})
+        except TokenError:
+            return Response({"status": False, "message": "Token error occurred"},
+                            status=status.HTTP_401_UNAUTHORIZED)

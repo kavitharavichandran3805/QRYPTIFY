@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom for My Account navigation
-import Logo from './Logo'; // Your full animated Logo.jsx component here
+import React, { useContext, useState } from 'react';
+import { Link } from 'react-router-dom'; 
+import Logo from './Logo'; 
 import {api} from './api'
+import { AuthContext } from '../AuthContext.jsx';
 
-// User icon SVG matching your sample (inside a circle user silhouette)
 const User = ({ className = 'w-8 h-8' }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -23,7 +23,7 @@ const User = ({ className = 'w-8 h-8' }) => (
   </svg>
 );
 
-// Simple Button component
+
 const Button = ({ variant, children, ...rest }) => (
   <button
     className={`px-4 py-2 rounded ${
@@ -35,17 +35,14 @@ const Button = ({ variant, children, ...rest }) => (
   </button>
 );
 
-// Simple page URL creator (unchanged for Home button)
 const createPageUrl = (page) => (page === 'Home' ? '/' : '/analysis');
 
-// Mock upload file API
 async function UploadFile({ file }) {
   return new Promise((resolve) =>
     setTimeout(() => resolve({ file_url: 'https://example.com/uploaded/' + file.name }), 1000)
   );
 }
 
-// Mock extraction API
 async function ExtractDataFromUploadedFile({ file_url, json_schema }) {
   return new Promise((resolve) =>
     setTimeout(
@@ -62,15 +59,17 @@ async function ExtractDataFromUploadedFile({ file_url, json_schema }) {
   );
 }
 
-// Updated Header component with dropdown menu
+
 const AppHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { accessToken, setAccessToken } = useContext(AuthContext);
 
   const handleLogout = async () => {
     try{
-      const result=await api('logout',"GET")
+      const result=await api('logout',"GET",null,accessToken)
       if(result.status){
         alert('Logged out successfully');
+        setAccessToken(null);
       }
       else{
         alert('Error in logging out')
@@ -88,23 +87,17 @@ const AppHeader = () => {
         <div className="flex items-center justify-between h-16">
           <Logo />
           <div className="flex items-center gap-4 relative">
-            {/* Home button remains unchanged as an anchor tag */}
             <a href={createPageUrl('Home')}>
               <Button variant="outline">Home</Button>
             </a>
-
-            {/* User Icon */}
             <div
               className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer"
               onClick={() => setMenuOpen((prev) => !prev)}
             >
               <User className="w-6 h-6" />
             </div>
-
-            {/* Dropdown Menu */}
             {menuOpen && (
               <div className="absolute right-0 top-12 w-40 bg-white border border-gray-200 rounded-lg shadow-lg">
-                {/* My Account now uses React Router Link for SPA navigation */}
                 <Link
                   to="/account"
                   className="block px-4 py-2 hover:bg-gray-100"
@@ -307,3 +300,4 @@ export default function AnalysisPage() {
     </div>
   );
 }
+
