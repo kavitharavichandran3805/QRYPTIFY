@@ -28,11 +28,11 @@ export default function Navigation({ activeSection, onNavigate }) {
           if (result.status) {
             navigate('/analysis')
           } else {
-            handleNavigate('login')
+            handleNavClick('login')
           }
         } catch (error) {
           console.error('API error:', error)
-          handleNavigate('login')
+          handleNavClick('login')
         }
   }
 

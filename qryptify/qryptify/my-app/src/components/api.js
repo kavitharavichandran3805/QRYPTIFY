@@ -12,6 +12,7 @@ export async function api(endpoint,method,body=null,token=null){
         credentials:'include'
       }
       if(token){
+        console.log("Access token exists")
         options.headers['Authorization']=`Bearer ${token}`
       }
       else{

@@ -70,7 +70,7 @@ class LoginAPI(APIView):
             value=str(refresh_token),
             httponly=True,
             secure=False,
-            samesite="Strict",
+            samesite="Lax",
             max_age=cookie_max_age
         )
         return res
@@ -125,7 +125,7 @@ class SignupAPI(APIView):
             value=str(refresh_token),
             httponly=True,
             secure=False,
-            samesite="Strict",
+            samesite="Lax",
             max_age=cookie_max_age
         )
         return res
