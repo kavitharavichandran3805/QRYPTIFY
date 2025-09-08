@@ -218,18 +218,11 @@ export default function HelpSection() {
             <h3 className="text-2xl font-bold text-gray-900 mb-6">
               Contact Expert Team
             </h3>
-            <input
-              type="email"
-              placeholder="Your Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
             <textarea
               placeholder="Write your query..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              rows={4}
+              rows={6}
               className="w-full border border-gray-300 rounded-lg p-3 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
             ></textarea>
             <div className="flex justify-end gap-4">
