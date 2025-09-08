@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from "react";
 import {
   MessageCircle,
   FileText,
@@ -7,10 +7,30 @@ import {
   ArrowRight,
   HelpCircle,
   Sparkles,
-} from 'lucide-react';
-import { Button } from '../components/ui/button';
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+import { Button } from "../components/ui/button";
 
 export default function HelpSection() {
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [email, setEmail] = useState("");
+  const [query, setQuery] = useState("");
+
+  const handleSendQuery = () => {
+    // Here you can add API integration to send the query
+    setShowContactForm(false);
+    setShowSuccessPopup(true);
+
+    // Hide popup after 2.5 seconds
+    setTimeout(() => {
+      setShowSuccessPopup(false);
+      setEmail("");
+      setQuery("");
+    }, 2500);
+  };
+
   const helpResources = [
     {
       icon: <FileText className="w-6 h-6" />,
@@ -61,12 +81,15 @@ export default function HelpSection() {
     {
       question: "Can I integrate Qryptify with my existing systems?",
       answer:
-        "No, Qryptify is designed as a standalone platform with its own secure environment. To maintain maximum security and prevent dependency risks, it does not integrate directly with external systems or third-party infrastructures."
-      },
+        "No, Qryptify is designed as a standalone platform with its own secure environment. To maintain maximum security and prevent dependency risks, it does not integrate directly with external systems or third-party infrastructures.",
+    },
   ];
 
   return (
-    <section id="help" className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+    <section
+      id="help"
+      className="py-20 bg-gradient-to-br from-gray-50 to-blue-50 relative"
+    >
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
@@ -74,8 +97,9 @@ export default function HelpSection() {
             Get the Help You Need
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Whether you're new to cryptographic analysis or an experienced researcher,
-            we provide comprehensive support to help you succeed with Qryptify.
+            Whether you're new to cryptographic analysis or an experienced
+            researcher, we provide comprehensive support to help you succeed
+            with Qryptify.
           </p>
         </div>
 
@@ -128,31 +152,33 @@ export default function HelpSection() {
 
           {/* Personalized Support Section */}
           <div className="bg-gradient-to-br from-blue-600 to-cyan-500 p-8 rounded-3xl text-white flex flex-col justify-between min-h-full">
-            <h3 className="text-2xl font-bold mb-4">Need Personalized Support?</h3>
-            
+            <h3 className="text-2xl font-bold mb-4">
+              Need Personalized Support?
+            </h3>
+
             <div className="space-y-6 mb-8">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-cyan-300 animate-pulse flex-shrink-0" />
                 <p className="text-blue-100 leading-relaxed">
                   Our team of cryptography experts is here — not just to provide
-                  technology, but to truly understand your challenges and craft a
-                  Qryptify experience that fits your world.
+                  technology, but to truly understand your challenges and craft
+                  a Qryptify experience that fits your world.
                 </p>
               </div>
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-cyan-300 animate-pulse flex-shrink-0" />
                 <p className="text-blue-100 leading-relaxed">
-                  From the very first conversation, we work alongside you, listening to
-                  your goals and mapping out how Qryptify can best protect what matters
-                  most.
+                  From the very first conversation, we work alongside you,
+                  listening to your goals and mapping out how Qryptify can best
+                  protect what matters most.
                 </p>
               </div>
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-cyan-300 animate-pulse flex-shrink-0" />
                 <p className="text-blue-100 leading-relaxed">
-                  Every organization is different, and so is the way we approach your
-                  implementation — with care, precision, and solutions designed
-                  exclusively for you.
+                  Every organization is different, and so is the way we approach
+                  your implementation — with care, precision, and solutions
+                  designed exclusively for you.
                 </p>
               </div>
             </div>
@@ -160,10 +186,10 @@ export default function HelpSection() {
             <div className="flex items-start gap-3 mb-8">
               <Sparkles className="w-5 h-5 text-cyan-300 animate-pulse flex-shrink-0" />
               <p className="text-blue-100 leading-relaxed">
-                With our dedicated guidance, you gain more than support; you gain a
-                trusted partner who ensures Qryptify becomes a seamless part of your
-                ecosystem, empowering you with confidence, resilience, and peace of
-                mind.
+                With our dedicated guidance, you gain more than support; you
+                gain a trusted partner who ensures Qryptify becomes a seamless
+                part of your ecosystem, empowering you with confidence,
+                resilience, and peace of mind.
               </p>
             </div>
 
@@ -175,12 +201,73 @@ export default function HelpSection() {
             </ul>
 
             {/* Call to Action Button */}
-            <Button className="bg-white text-blue-600 hover:bg-blue-50 px-8">
+            <Button
+              onClick={() => setShowContactForm(true)}
+              className="bg-white text-blue-600 hover:bg-blue-50 px-8"
+            >
               Contact Expert Team
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Contact Form Modal */}
+      {showContactForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full animate-fadeIn">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">
+              Contact Expert Team
+            </h3>
+            <input
+              type="email"
+              placeholder="Your Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <textarea
+              placeholder="Write your query..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg p-3 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            ></textarea>
+            <div className="flex justify-end gap-4">
+              <Button
+                onClick={() => setShowContactForm(false)}
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendQuery}
+                className="bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Send Query
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center animate-fadeIn max-w-sm w-full">
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-green-100 p-3 rounded-full">
+                <CheckCircle className="w-12 h-12 text-green-500 animate-bounce" />
+              </div>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900">
+              Query Sent Successfully!
+            </h3>
+            <p className="mt-2 text-gray-600">
+              Our experts will reach out to you shortly.
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
