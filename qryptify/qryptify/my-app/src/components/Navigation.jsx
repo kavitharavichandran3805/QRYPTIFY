@@ -37,9 +37,7 @@ export default function Navigation({ activeSection, onNavigate }) {
 
   const handleLogout = async () => {
     try {
-      // call API to invalidate server session if you need to
       const result = await api('logout', 'GET', null, accessToken)
-      // clear local token state regardless of API success so UI updates
       setAccessToken(null)
 
       if (!result?.status) {

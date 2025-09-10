@@ -84,8 +84,7 @@ export default function LoginSection({ onSuccess }) {
 
   async function resetPassword() {
     try {
-      // Placeholder API call
-      const result = await api('reset-password', 'POST', {
+      const result = await api('login', 'PATCH', {
         email: formData.email,
         newPassword: formData.password,
         confirmPassword: formData.confirmPassword,
@@ -96,7 +95,7 @@ export default function LoginSection({ onSuccess }) {
         setShowPopup(true);
         setTimeout(() => {
           setShowPopup(false);
-          setIsForgotPassword(false); // go back to login
+          setIsForgotPassword(false); 
         }, 2500);
       } else {
         setApiStatus(false);

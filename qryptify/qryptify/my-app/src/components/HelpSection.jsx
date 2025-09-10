@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from 'react'
 import {
   MessageCircle,
   FileText,
@@ -11,24 +11,65 @@ import {
   XCircle,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
+import {api} from "./api.js";
+import { AuthContext } from '../AuthContext.jsx';
+import { Link, useNavigate } from 'react-router-dom'
+
 
 export default function HelpSection() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [email, setEmail] = useState("");
   const [query, setQuery] = useState("");
+  const { accessToken, setAccessToken } = useContext(AuthContext)
+  const navigate = useNavigate()
 
-  const handleSendQuery = () => {
-    // Here you can add API integration to send the query
-    setShowContactForm(false);
-    setShowSuccessPopup(true);
+  const checkUser=async()=>{
+    try{
+      const result=await api("user-details","GET",null,accessToken);
+      if(result.status){
+        console.log("for mailing user exists")
+        setShowContactForm(true)
+      }
+      else{
+          navigate("/login");
+      }
+    }
+    catch(err){
+        navigate("/login");
+    }
+  }
 
-    // Hide popup after 2.5 seconds
-    setTimeout(() => {
-      setShowSuccessPopup(false);
-      setEmail("");
-      setQuery("");
-    }, 2500);
+  const handleSendQuery = async () => {
+    try{
+      // const result=await api("user-details","GET",null,accessToken);
+      // if(result.status){
+        const send_mail=await api("issue-mail","POST",{message:query},accessToken);
+        if(send_mail.status){
+          setShowContactForm(false);
+          setShowSuccessPopup(true);
+          setTimeout(() => {
+            setShowSuccessPopup(false);
+            setEmail("");
+            setQuery("");
+          }, 2500);
+        }
+      }
+      // else{
+      //  navigate("/login");
+      // }
+
+    // }
+    catch(err){
+      navigate("/login");
+    }   
+    // setShowContactForm(false);
+    // setShowSuccessPopup(true);
+    // setTimeout(() => {
+    //   setShowSuccessPopup(false);
+    //   setEmail("");
+    //   setQuery("");
+    // }, 2500);
   };
 
   const helpResources = [
@@ -202,7 +243,7 @@ export default function HelpSection() {
 
             {/* Call to Action Button */}
             <Button
-              onClick={() => setShowContactForm(true)}
+              onClick={() => checkUser()}
               className="bg-white text-blue-600 hover:bg-blue-50 px-8"
             >
               Contact Expert Team

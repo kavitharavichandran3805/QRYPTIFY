@@ -1,4 +1,16 @@
 import { getCookie } from "./cookies";
+import { jwtDecode } from "jwt-decode";
+
+function isTokenExpired(token) {
+  try {
+    const decoded = jwtDecode(token); 
+    const now = Date.now() / 1000;
+    return decoded.exp < now;
+  } catch (e) {
+    return true; 
+  }
+}
+
 
 export async function api(endpoint,method,body=null,token=null){
   try{
@@ -11,7 +23,7 @@ export async function api(endpoint,method,body=null,token=null){
         },
         credentials:'include'
       }
-      if(token){
+      if(token && !isTokenExpired(token)){
         console.log("Access token exists")
         options.headers['Authorization']=`Bearer ${token}`
       }

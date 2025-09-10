@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from django.contrib.auth.models import User
+from qryptify.settings import DEFAULT_TO_EMAIL1,DEFAULT_TO_EMAIL2,DEFAULT_TO_EMAIL3
 from .serializers import UserSerializer
 from django.contrib.auth import authenticate,login,logout
 from rest_framework.authtoken.models import Token
@@ -18,9 +19,25 @@ from datetime import timedelta
 from rest_framework.permissions import AllowAny
 
 
+
 def get_csrf_token(request):
     print("inside the get_csrf_token")
     return JsonResponse({"token": get_token(request)}) 
+
+
+class EmailAPI(APIView):
+
+    permission_classes=[IsAuthenticated]
+    def post(self,request):
+        message=request.data.get('message')
+        send_mail(
+            'Support mail',
+            message,
+            request.user.email,
+            [DEFAULT_TO_EMAIL1,DEFAULT_TO_EMAIL2,DEFAULT_TO_EMAIL3],
+            fail_silently=False
+        )
+        return Response({"status":True,"message":"Mail successfully sent"})
 
 class LoginAPI(APIView):
 
@@ -78,20 +95,28 @@ class LoginAPI(APIView):
     def patch(self, request):
         data = request.data
         email = data.get('email')
+
         try:
             obj = User.objects.get(email=email)
         except User.DoesNotExist:
             return Response({"status": False, "message": "No user exists"}, status=status.HTTP_404_NOT_FOUND)
-        password = data.get('password')
-        if password:
-            obj.set_password(password)
+
+        new_password = data.get('newPassword')
+        confirm_password = data.get('confirmPassword')
+
+        if new_password:
+            if new_password != confirm_password:
+                return Response({"status": False, "message": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+            obj.set_password(new_password)
             obj.save()
             return Response({"status": True, "message": "Password updated successfully"})
+
         serializer = UserSerializer(obj, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({"status": True, "message": "Successfully updated"})
         return Response({"status": False, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
     def delete(self, request):
         data = request.data
