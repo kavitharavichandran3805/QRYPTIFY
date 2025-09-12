@@ -8,22 +8,20 @@ import { AuthContext } from '../AuthContext.jsx'
 // Button component
 const Button = ({ variant, children, ...rest }) => (
   <button
-    className={`px-4 py-2 rounded ${
-      variant === 'outline' ? 'border border-gray-400 bg-white' : 'bg-blue-500 text-white'
-    }`}
+    className={`px-4 py-2 rounded ${variant === 'outline' ? 'border border-gray-400 bg-white' : 'bg-blue-500 text-white'}`}
     {...rest}
   >
     {children}
   </button>
-)
+);
 
-const createPageUrl = (page) => (page === 'Home' ? '/' : '/analysis')
+const createPageUrl = (page) => (page === 'Home' ? '/' : '/analysis');
 
 // Mock upload file API
 async function UploadFile({ file }) {
   return new Promise((resolve) =>
     setTimeout(() => resolve({ file_url: 'https://example.com/uploaded/' + file.name }), 1000)
-  )
+  );
 }
 
 // Mock extraction API
@@ -40,41 +38,40 @@ async function ExtractDataFromUploadedFile({ file_url, json_schema }) {
         }),
       1500
     )
-  )
+  );
 }
 
 // ---------- HEADER ----------
 const AppHeader = ({ onLogout }) => {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [showLogoutPopup, setShowLogoutPopup] = useState(false)
-  const [logoutError, setLogoutError] = useState(null) // NEW: Track logout error for popup
-  const { accessToken, setAccessToken } = useContext(AuthContext)
-  const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const [logoutError, setLogoutError] = useState(null);
+  const { accessToken, setAccessToken } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
-    let success = false
+    let success = false;
     try {
-      const result = await api('logout', 'GET', null, accessToken)
-      setAccessToken(null)
+      const result = await api('logout', 'GET', null, accessToken);
+      setAccessToken(null);
       if (!result.status) {
-        setLogoutError('Logout failed due to a server error.')
+        setLogoutError('Logout failed due to a server error.');
       } else {
-        success = true
+        success = true;
       }
     } catch (err) {
-      setAccessToken(null)
-      setLogoutError('Unable to connect to logout service. Please try again.')
+      setAccessToken(null);
+      setLogoutError('Unable to connect to logout service. Please try again.');
     }
-    setShowLogoutPopup(true)
-    setMenuOpen(false)
-
+    setShowLogoutPopup(true);
+    setMenuOpen(false);
     setTimeout(() => {
-      setShowLogoutPopup(false)
-      setLogoutError(null)
-      if (onLogout) onLogout()
-      navigate('/')
-    }, 3000)
-  }
+      setShowLogoutPopup(false);
+      setLogoutError(null);
+      if (onLogout) onLogout();
+      navigate('/');
+    }, 3000);
+  };
 
   return (
     <>
@@ -139,14 +136,15 @@ const AppHeader = ({ onLogout }) => {
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
 // ---------- FILE UPLOAD ----------
 const FileUploadBox = ({ onFileSelect, isLoading }) => {
   const handleFileChange = (ev) => {
-    if (ev.target.files.length > 0) onFileSelect(ev.target.files[0])
-  }
+    if (ev.target.files.length > 0) onFileSelect(ev.target.files[0]);
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 flex flex-col items-center justify-center p-8 h-full">
       <input
@@ -158,22 +156,14 @@ const FileUploadBox = ({ onFileSelect, isLoading }) => {
       />
       <label
         htmlFor="file-upload"
-        className={`w-full text-center group cursor-pointer ${
-          isLoading ? 'cursor-not-allowed' : ''
-        }`}
+        className={`w-full text-center group cursor-pointer ${isLoading ? 'cursor-not-allowed' : ''}`}
       >
         <div
-          className={`relative border-2 border-dashed border-gray-300 rounded-xl p-10 transition-colors duration-300 ${
-            !isLoading
-              ? 'group-hover:border-blue-500 group-hover:bg-blue-50'
-              : 'bg-gray-100'
-          }`}
+          className={`relative border-2 border-dashed border-gray-300 rounded-xl p-10 transition-colors duration-300 ${!isLoading ? 'group-hover:border-blue-500 group-hover:bg-blue-50' : 'bg-gray-100'}`}
         >
           <div className="flex flex-col items-center text-gray-600">
             <svg
-              className={`w-12 h-12 mb-4 text-gray-400 transition-transform duration-300 ${
-                !isLoading ? 'group-hover:scale-110 group-hover:text-blue-600' : ''
-              }`}
+              className={`w-12 h-12 mb-4 text-gray-400 transition-transform duration-300 ${!isLoading ? 'group-hover:scale-110 group-hover:text-blue-600' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -192,27 +182,29 @@ const FileUploadBox = ({ onFileSelect, isLoading }) => {
         </div>
       </label>
     </div>
-  )
-}
+  );
+};
 
 // ---------- PROCESSING ANIMATION ----------
 const ProcessingAnimation = () => (
   <div className="flex flex-col items-center justify-center h-full text-center">
-    <style>{`
-      .scanner {
-        width: 100px;
-        height: 2px;
-        background-color: #3b82f6;
-        box-shadow: 0 0 10px #3b82f6, 0 0 20px #3b82f6;
-        animation: scan 3s linear infinite;
-        position: absolute;
-      }
-      @keyframes scan {
-        0% { top: 0; }
-        50% { top: 100%; }
-        100% { top: 0; }
-      }
-    `}</style>
+    <style>
+      {`
+        .scanner {
+          width: 100px;
+          height: 2px;
+          background-color: #3b82f6;
+          box-shadow: 0 0 10px #3b82f6, 0 0 20px #3b82f6;
+          animation: scan 3s linear infinite;
+          position: absolute;
+        }
+        @keyframes scan {
+          0% { top: 0; }
+          50% { top: 100%; }
+          100% { top: 0; }
+        }
+      `}
+    </style>
     <div className="relative w-24 h-24 mb-6">
       <div className="w-full h-full border-4 border-dashed border-blue-200 rounded-full animate-spin-slow"></div>
       <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
@@ -222,7 +214,7 @@ const ProcessingAnimation = () => (
     <h3 className="text-2xl font-semibold text-gray-800">Processing...</h3>
     <p className="text-gray-500 mt-2">Our AI is analyzing the cryptographic patterns.</p>
   </div>
-)
+);
 
 // ---------- RESULTS ----------
 const ResultsDisplay = ({ result, isLoading, error }) => {
@@ -231,25 +223,27 @@ const ResultsDisplay = ({ result, isLoading, error }) => {
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 h-full">
         <ProcessingAnimation />
       </div>
-    )
+    );
   if (error)
     return (
       <div className="bg-white rounded-2xl shadow-lg border border-red-200 p-8 h-full flex flex-col items-center justify-center text-center">
         <h3 className="text-2xl font-semibold text-red-700">Analysis Failed</h3>
         <p className="text-red-500 mt-2">{error}</p>
       </div>
-    )
+    );
   if (!result)
     return (
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 h-full flex flex-col items-center justify-center text-center">
         <h3 className="text-2xl font-semibold text-gray-800">Awaiting File</h3>
         <p className="text-gray-500 mt-2">Upload an encrypted file to begin the analysis.</p>
       </div>
-    )
+    );
+
   const topAlgorithm = result.algorithms.reduce(
     (max, algo) => (algo.confidence_score > max.confidence_score ? algo : max),
     result.algorithms[0]
-  )
+  );
+
   return (
     <div className="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl shadow-2xl p-8 h-full text-white flex flex-col items-center justify-center text-center">
       <h3 className="text-xl font-medium text-blue-100 mb-2">Top Algorithm Detected</h3>
@@ -260,21 +254,22 @@ const ResultsDisplay = ({ result, isLoading, error }) => {
       </div>
       <p className="text-blue-200 mt-4">Confidence Score</p>
     </div>
-  )
-}
+  );
+};
 
 // ---------- MAIN PAGE ----------
 export default function AnalysisPage({ onForceHome }) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [analysisResult, setAnalysisResult] = useState(null)
-  const [error, setError] = useState(null)
+  const [isLoading, setIsLoading] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleFileSelect = async (file) => {
-    setIsLoading(true)
-    setAnalysisResult(null)
-    setError(null)
+    setIsLoading(true);
+    setAnalysisResult(null);
+    setError(null);
+
     try {
-      const { file_url } = await UploadFile({ file })
+      const { file_url } = await UploadFile({ file });
       const schema = {
         type: 'object',
         properties: {
@@ -291,20 +286,20 @@ export default function AnalysisPage({ onForceHome }) {
           },
         },
         required: ['algorithms'],
-      }
-      const output = await ExtractDataFromUploadedFile({ file_url, json_schema: schema })
+      };
+      const output = await ExtractDataFromUploadedFile({ file_url, json_schema: schema });
       if (output && output.algorithms) {
-        setAnalysisResult(output)
+        setAnalysisResult(output);
       } else {
-        setError("AI could not process the file. Please ensure it's a valid encrypted text file.")
+        setError("AI could not process the file. Please ensure it's a valid encrypted text file.");
       }
     } catch (e) {
-      console.error(e)
-      setError('An unexpected error occurred during analysis.')
+      console.error(e);
+      setError('An unexpected error occurred during analysis.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
@@ -316,5 +311,5 @@ export default function AnalysisPage({ onForceHome }) {
         </div>
       </main>
     </div>
-  )
+  );
 }
