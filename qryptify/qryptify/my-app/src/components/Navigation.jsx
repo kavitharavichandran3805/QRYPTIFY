@@ -1,64 +1,63 @@
-import React, { useState, useContext } from 'react'
-import { useNavigate, Link } from "react-router-dom"
-import { Button } from '../components/ui/button'
-import { Menu, X, User, CheckCircle, XCircle } from 'lucide-react'
-import Logo from './Logo'
-import { api } from './api.js'
-import { AuthContext } from '../AuthContext.jsx'
+import React, { useState, useContext } from 'react';
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from '../components/ui/button';
+import { Menu, X, User, CheckCircle, XCircle } from 'lucide-react';
+import Logo from './Logo';
+import { api } from './api.js';
+import { AuthContext } from '../AuthContext.jsx';
 
 export default function Navigation({ activeSection, onNavigate }) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [showLogoutPopup, setShowLogoutPopup] = useState(false)
-  const [logoutError, setLogoutError] = useState(null)
-
-  const navigate = useNavigate()
-  const { accessToken, setAccessToken } = useContext(AuthContext)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const [logoutError, setLogoutError] = useState(null);
+  const navigate = useNavigate();
+  const { accessToken, setAccessToken } = useContext(AuthContext);
 
   const navItems = [
     { id: 'home', label: 'Home' },
     { id: 'about', label: 'About' },
     { id: 'help', label: 'Help' }
-  ]
+  ];
 
   const handleNavClick = (sectionId) => {
-    if (onNavigate) onNavigate(sectionId)
-    setIsMobileMenuOpen(false)
-  }
+    if (onNavigate) onNavigate(sectionId);
+    setIsMobileMenuOpen(false);
+  };
 
   // simplified: check context token directly rather than calling server
   const handleLoginClick = () => {
     if (accessToken) {
-      navigate('/analysis')
+      navigate('/analysis');
     } else {
-      handleNavClick('login')
+      handleNavClick('login');
     }
-  }
+  };
 
   const handleLogout = async () => {
     try {
-      const result = await api('logout', 'GET', null, accessToken)
-      setAccessToken(null)
+      const result = await api('logout', 'GET', null, accessToken);
+      setAccessToken(null);
 
       if (!result?.status) {
-        setLogoutError('Logout failed on server.')
+        setLogoutError('Logout failed on server.');
       } else {
-        setLogoutError(null)
+        setLogoutError(null);
       }
     } catch (err) {
-      setAccessToken(null)
-      setLogoutError('Network error while logging out.')
+      setAccessToken(null);
+      setLogoutError('Network error while logging out.');
     } finally {
-      setShowLogoutPopup(true)
-      setMenuOpen(false)
+      setShowLogoutPopup(true);
+      setMenuOpen(false);
 
       setTimeout(() => {
-        setShowLogoutPopup(false)
-        setLogoutError(null)
-        navigate('/')
-      }, 2500)
+        setShowLogoutPopup(false);
+        setLogoutError(null);
+        navigate('/');
+      }, 2500);
     }
-  }
+  };
 
   return (
     <>
@@ -202,5 +201,5 @@ export default function Navigation({ activeSection, onNavigate }) {
         </div>
       )}
     </>
-  )
+  );
 }

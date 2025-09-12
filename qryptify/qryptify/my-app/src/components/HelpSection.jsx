@@ -23,7 +23,7 @@ export default function HelpSection() {
   const [query, setQuery] = useState("");
   const { accessToken, setAccessToken } = useContext(AuthContext)
   const navigate = useNavigate()
-
+  
   const checkUser=async()=>{
     try{
       const result=await api("user-details","GET",null,accessToken);
@@ -32,11 +32,11 @@ export default function HelpSection() {
         setShowContactForm(true)
       }
       else{
-          navigate("/login");
+          handleContactClick()
       }
     }
     catch(err){
-        navigate("/login");
+        handleContactClick()
     }
   }
 
@@ -123,8 +123,16 @@ export default function HelpSection() {
       question: "Can I integrate Qryptify with my existing systems?",
       answer:
         "No, Qryptify is designed as a standalone platform with its own secure environment. To maintain maximum security and prevent dependency risks, it does not integrate directly with external systems or third-party infrastructures.",
+
     },
   ];
+
+  const handleContactClick = () => {
+    const loginSection = document.getElementById('login');
+    if (loginSection) {
+      loginSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <section
@@ -193,10 +201,10 @@ export default function HelpSection() {
 
           {/* Personalized Support Section */}
           <div className="bg-gradient-to-br from-blue-600 to-cyan-500 p-8 rounded-3xl text-white flex flex-col justify-between min-h-full">
+
             <h3 className="text-2xl font-bold mb-4">
               Need Personalized Support?
             </h3>
-
             <div className="space-y-6 mb-8">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-cyan-300 animate-pulse flex-shrink-0" />
@@ -245,6 +253,7 @@ export default function HelpSection() {
             <Button
               onClick={() => checkUser()}
               className="bg-white text-blue-600 hover:bg-blue-50 px-8"
+
             >
               Contact Expert Team
             </Button>
