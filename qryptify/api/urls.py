@@ -8,5 +8,6 @@ urlpatterns=[
     path('user-details/',UserDetailsAPI.as_view()),
     path('logout/',LogoutAPI.as_view()),
     path('refresh-token/',RefreshTokenAPI.as_view()),
-    path('issue-mail/',EmailAPI.as_view())
+    path('issue-mail/',EmailAPI.as_view()),
+    path('reset-password/',LoginAPI.as_view())
 ]

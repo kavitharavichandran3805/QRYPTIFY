@@ -412,6 +412,7 @@ export default function LoginSection({ onSuccess }) {
 
   async function resetPassword() {
     try {
+      console.log("inside the reset password method")
       const result = await api('reset-password', 'PATCH', {
         email: formData.email,
         newPassword: formData.password,
