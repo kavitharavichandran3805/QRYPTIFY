@@ -367,6 +367,7 @@ export default function LoginSection({ onSuccess }) {
           navigate('/');
         }, 2500);
       } else {
+        console.log("Login failed")
         setApiStatus(false);
         setShowPopup(true);
         setTimeout(() => setShowPopup(false), 2500);
@@ -710,6 +711,39 @@ export default function LoginSection({ onSuccess }) {
             </div>
           </div>
         </div>
+        {/* Popup Overlay */}
+          {showPopup && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 text-center animate-fadeIn max-w-sm w-full">
+                {apiStatus ? (
+                  <>
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="bg-green-100 p-3 rounded-full">
+                        <CheckCircle className="w-12 h-12 text-green-500 animate-bounce" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {isSignUp ? 'Signed up successfully!' : isForgotPassword ? 'Password reset successful!' : 'Logged in successfully!'}
+                    </h3>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="bg-red-100 p-3 rounded-full">
+                        <XCircle className="w-12 h-12 text-red-600 animate-shake" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-red-700">
+                      {isSignUp ? 'Signup failed!' : isForgotPassword ? 'Password reset failed!' : 'Login failed!'}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Please try again.
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
       </div>
     </section>
   );

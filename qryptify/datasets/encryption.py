@@ -4,6 +4,8 @@ from Crypto.PublicKey import RSA
 from Twofish import TwoFish
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad
+from IDEA import IDEA
+from RC5 import rc5
 import base64
 import os
 
@@ -41,67 +43,93 @@ def get_rsa_keys(private_path="private.pem", public_path="public.pem", key_size=
 
     return private_key, public_key
 
+#SYMMETRIC ALGORITHM
 
+#1
 def encrypt_aes_gcm(data: str) -> str:
-    # print("Encrypting data using AES-GCM")
-    key = get_random_bytes(16)  
+    key = get_random_bytes(16)
     cipher = AES.new(key, AES.MODE_GCM)
     ciphertext, tag = cipher.encrypt_and_digest(data.encode())
-    return base64.b64encode(key + cipher.nonce + tag + ciphertext).decode()
+    return base64.b64encode(cipher.nonce + tag + ciphertext).decode()
 
-
+#2
 def encrypt_aes_cbc(data: str) -> str:
-    # print("Encrypting data using AES-CBC")
-    key = get_random_bytes(16)  
+    key = get_random_bytes(16)
     cipher = AES.new(key, AES.MODE_CBC)
-    padded_data=pad(data.encode(),AES.block_size)
-    ciphertext=cipher.encrypt(padded_data,)
-    return base64.b64encode(key + cipher.iv + ciphertext).decode()
+    padded_data = pad(data.encode(), AES.block_size)
+    ciphertext = cipher.encrypt(padded_data)
+    return base64.b64encode(cipher.iv + ciphertext).decode()
 
+#3
 def encrypt_des_cbc(data: str) -> str:
-    # print("Encrypting data using DES-CBCP")
-    key = get_random_bytes(8)  
+    key = get_random_bytes(8)
     cipher = DES.new(key, DES.MODE_CBC)
     padded_data = pad(data.encode(), DES.block_size)
     ciphertext = cipher.encrypt(padded_data)
-    return base64.b64encode(key + cipher.iv + ciphertext).decode()
+    return base64.b64encode(cipher.iv + ciphertext).decode()
 
+#4
 def encrypt_3des_cbc(data: str) -> str:
-    # print("Encrypting data using 3DES-CBC")
-    key=get_random_bytes(24)
-    key=DES3.adjust_key_parity(key)
-    cipher=DES3.new(key,DES3.MODE_CBC)
-    padded_data=pad(data.encode(),DES3.block_size)
-    ciphertext=cipher.encrypt(padded_data)
-    return base64.b64encode(key + cipher.iv + ciphertext).decode()
+    key = get_random_bytes(24)
+    key = DES3.adjust_key_parity(key)
+    cipher = DES3.new(key, DES3.MODE_CBC)
+    padded_data = pad(data.encode(), DES3.block_size)
+    ciphertext = cipher.encrypt(padded_data)
+    return base64.b64encode(cipher.iv + ciphertext).decode()
 
+#5
 def encrypt_blowfish_ctr(data: str) -> str:
-    # print("Encrypting data using BLOWFISH-CTR")
-    key=get_random_bytes(16)
-    nonce=get_random_bytes(4)
-    cipher=Blowfish.new(key,Blowfish.MODE_CTR,nonce=nonce)
-    ciphertext=cipher.encrypt(data.encode())
-    return base64.b64encode(key + nonce + ciphertext).decode()
+    key = get_random_bytes(16)
+    nonce = get_random_bytes(4)
+    cipher = Blowfish.new(key, Blowfish.MODE_CTR, nonce=nonce)
+    ciphertext = cipher.encrypt(data.encode())
+    return base64.b64encode(nonce + ciphertext).decode()
 
+#6
 def encrypt_twofish_cbc(data: str) -> str:
-    # print("Encrypting data using TWOFISH-CBC")
-    key=get_random_bytes(16)
-    hex_key=key.hex()
-    plain=TwoFish.text_To_Hex(data)
-    mode="CBC"
-    ciphertext=TwoFish.TwoFish_encrypt(plain,hex_key,mode)
-    return base64.b64encode(key + bytes.fromhex(ciphertext)).decode()
+    key = get_random_bytes(16)
+    hex_key = key.hex()
+    plain = TwoFish.text_To_Hex(data)
+    mode = "CBC"
+    ciphertext = TwoFish.TwoFish_encrypt(plain, hex_key, mode)
+    return base64.b64encode(bytes.fromhex(ciphertext)).decode()
 
+#7
 def encrypt_rc4(data: str) -> str:
-    # print("Encrypting data using RC4")
+    key = get_random_bytes(16)
+    cipher = ARC4.new(key)
+    ciphertext = cipher.encrypt(data.encode())
+    return base64.b64encode(ciphertext).decode()
+
+#8
+W=32
+R=12
+def encrypt_rc5(data: str) -> str:
     key=get_random_bytes(16)
-    cipher=ARC4.new(key)
-    ciphertext=cipher.encrypt(data.encode())
-    return base64.b64encode(key + ciphertext).decode()
+    cipher=rc5.RC5(W,R,key)
+    plaintext_bytes=data.encode()
+    ciphertext=cipher.encryptBytes(plaintext_bytes)
+    return base64.b64encode(ciphertext).decode()
+
+#9
+def encrypt_rc6(data: str) -> str:
+    pass
+
+#10
+def encrypt_idea(data: str) -> str:
+    key=get_random_bytes(16)
+    cipher=IDEA.IDEAWrapper(key)
+    plaintext_bytes=data.encode()
+    ciphertext=cipher.encrypt(plaintext_bytes)
+    return base64.b64encode(ciphertext).decode()
+
+#
 
 
+#ASYMMETRIC ALGORITHMS 
+
+#
 privateKey, publicKey = get_rsa_keys()
-
 def encrypt_rsa_oaep_hybrid(data: str, publicKey) -> str:
     aes_key = get_random_bytes(16)
     cipher_aes = AES.new(aes_key, AES.MODE_CBC)
