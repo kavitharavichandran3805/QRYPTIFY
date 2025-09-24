@@ -8,68 +8,46 @@ import {
   HelpCircle,
   Sparkles,
   CheckCircle,
-  XCircle,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
-import {api} from "./api.js";
+import { api } from "./api.js";
 import { AuthContext } from '../AuthContext.jsx';
-import { Link, useNavigate } from 'react-router-dom'
-
+import { useNavigate } from 'react-router-dom'
 
 export default function HelpSection() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [email, setEmail] = useState("");
   const [query, setQuery] = useState("");
-  const { accessToken, setAccessToken } = useContext(AuthContext)
+  const { accessToken } = useContext(AuthContext)
   const navigate = useNavigate()
-  
-  const checkUser=async()=>{
-    try{
-      const result=await api("user-details","GET",null,accessToken);
-      if(result.status){
-        console.log("for mailing user exists")
+
+  const checkUser = async () => {
+    try {
+      const result = await api("user-details", "GET", null, accessToken);
+      if (result.status) {
         setShowContactForm(true)
-      }
-      else{
-          handleContactClick()
-      }
-    }
-    catch(err){
+      } else {
         handleContactClick()
+      }
+    } catch (err) {
+      handleContactClick()
     }
   }
 
   const handleSendQuery = async () => {
-    try{
-      // const result=await api("user-details","GET",null,accessToken);
-      // if(result.status){
-        const send_mail=await api("issue-mail","POST",{message:query},accessToken);
-        if(send_mail.status){
-          setShowContactForm(false);
-          setShowSuccessPopup(true);
-          setTimeout(() => {
-            setShowSuccessPopup(false);
-            setEmail("");
-            setQuery("");
-          }, 2500);
-        }
+    try {
+      const send_mail = await api("issue-mail", "POST", { message: query }, accessToken);
+      if (send_mail.status) {
+        setShowContactForm(false);
+        setShowSuccessPopup(true);
+        setTimeout(() => {
+          setShowSuccessPopup(false);
+          setQuery("");
+        }, 2500);
       }
-      // else{
-      //  navigate("/login");
-      // }
-
-    // }
-    catch(err){
+    } catch (err) {
       navigate("/login");
-    }   
-    // setShowContactForm(false);
-    // setShowSuccessPopup(true);
-    // setTimeout(() => {
-    //   setShowSuccessPopup(false);
-    //   setEmail("");
-    //   setQuery("");
-    // }, 2500);
+    }
   };
 
   const helpResources = [
@@ -79,6 +57,7 @@ export default function HelpSection() {
       description:
         "Access a curated collection of FAQs, troubleshooting tips, and best practices to help you resolve common questions quickly.",
       action: "Explore Resources",
+      path: "/explore"
     },
     {
       icon: <Video className="w-6 h-6" />,
@@ -86,6 +65,7 @@ export default function HelpSection() {
       description:
         "Stay informed with the latest Qryptify enhancements, feature releases, and cryptography insights directly from our team.",
       action: "See Updates",
+      path: "/updates"
     },
     {
       icon: <MessageCircle className="w-6 h-6" />,
@@ -93,6 +73,7 @@ export default function HelpSection() {
       description:
         "Get real-time assistance from our cryptography experts available 24/7 to help with your analysis needs.",
       action: "Ping Us",
+      path: "/ping"
     },
     {
       icon: <Users className="w-6 h-6" />,
@@ -100,6 +81,7 @@ export default function HelpSection() {
       description:
         "Dive into in-depth papers and technical research highlighting cryptographic methodologies behind Qryptify.",
       action: "Read More",
+      path: "/read"
     },
   ];
 
@@ -123,7 +105,6 @@ export default function HelpSection() {
       question: "Can I integrate Qryptify with my existing systems?",
       answer:
         "No, Qryptify is designed as a standalone platform with its own secure environment. To maintain maximum security and prevent dependency risks, it does not integrate directly with external systems or third-party infrastructures.",
-
     },
   ];
 
@@ -158,6 +139,7 @@ export default function HelpSection() {
             <div
               key={index}
               className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-lg transition-all duration-300 group cursor-pointer"
+              onClick={() => navigate(resource.path)}
             >
               <div className="text-blue-600 mb-4 group-hover:scale-110 transition-transform duration-300">
                 {resource.icon}
@@ -253,7 +235,6 @@ export default function HelpSection() {
             <Button
               onClick={() => checkUser()}
               className="bg-white text-blue-600 hover:bg-blue-50 px-8"
-
             >
               Contact Expert Team
             </Button>
