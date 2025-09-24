@@ -1,4 +1,4 @@
-from rc6 import *
+from RC6.rc6 import *
 
 def encrypt_block(sentence, s):
     encoded = blockConverter(sentence)
@@ -25,13 +25,26 @@ def encrypt_block(sentence, s):
 
     return [A, B, C, D]
 
+# def encrypt(text, s):
+#     text = pad(text)  # PKCS7 padding
+#     ciphertext_blocks = []
+#     for i in range(0, len(text), 16):  # process 16-byte blocks
+#         block = text[i:i+16]
+#         cipher_block = encrypt_block(block, s)
+#         # convert integers -> bytes
+#         for val in cipher_block:
+#             ciphertext_blocks.append(val.to_bytes(4, 'big'))
+#     return b''.join(ciphertext_blocks).hex()
+
 def encrypt(text, s):
-    text = pad(text)  # PKCS7 padding
+    if isinstance(text, str):
+        text = text.encode('utf-8')
+    
+    text = pad(text)
     ciphertext_blocks = []
-    for i in range(0, len(text), 16):  # process 16-byte blocks
+    for i in range(0, len(text), 16):
         block = text[i:i+16]
         cipher_block = encrypt_block(block, s)
-        # convert integers -> bytes
         for val in cipher_block:
             ciphertext_blocks.append(val.to_bytes(4, 'big'))
     return b''.join(ciphertext_blocks).hex()

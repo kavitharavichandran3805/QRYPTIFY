@@ -11,19 +11,44 @@ def ROL(x, n, bits=32):
     return ROR(x, bits - n, bits)
 
 # convert input sentence into 4 blocks of 32-bit binary
+# def blockConverter(sentence):
+#     encoded = []
+#     res = ""
+#     for i in range(len(sentence)):
+#         if i % 4 == 0 and i != 0:
+#             encoded.append(res)
+#             res = ""
+#         temp = bin(ord(sentence[i]))[2:]
+#         temp = temp.zfill(8)   # ensure 8 bits
+#         res += temp
+#     encoded.append(res)
+#     return encoded
 def blockConverter(sentence):
     encoded = []
     res = ""
-    for i in range(len(sentence)):
+    
+    # Handle both string and bytes input
+    if isinstance(sentence, bytes):
+        byte_values = list(sentence)
+    else:
+        byte_values = [ord(c) for c in sentence]
+    
+    for i, byte_val in enumerate(byte_values):
         if i % 4 == 0 and i != 0:
             encoded.append(res)
             res = ""
-        temp = bin(ord(sentence[i]))[2:]
-        temp = temp.zfill(8)   # ensure 8 bits
+        temp = bin(byte_val)[2:]
+        temp = temp.zfill(8)
         res += temp
-    encoded.append(res)
+    
+    if res:
+        encoded.append(res)
+    
+    # Ensure we have exactly 4 blocks
+    while len(encoded) < 4:
+        encoded.append("0" * 32)
+    
     return encoded
-
 # converts 4 blocks array of int into string
 def deBlocker(blocks):
     s = ""
@@ -60,9 +85,17 @@ def generateKey(userkey):
     return s
 
 # PKCS7 padding
+# def pad(data, block_size=16):
+#     padding_len = block_size - (len(data) % block_size)
+#     return data + chr(padding_len) * padding_len
+
 def pad(data, block_size=16):
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    
     padding_len = block_size - (len(data) % block_size)
-    return data + chr(padding_len) * padding_len
+    padding_byte = bytes([padding_len])
+    return data + padding_byte * padding_len
 
 def unpad(data):
     padding_len = ord(data[-1])
