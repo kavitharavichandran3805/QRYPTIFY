@@ -11,5 +11,5 @@
 *.sig
 
 pkg/
-src/
+
 qryptifyenv/
