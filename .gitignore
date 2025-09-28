@@ -13,4 +13,4 @@
 pkg/
 src/
 qryptifyenv/
-node-modules/
+node_modules/
