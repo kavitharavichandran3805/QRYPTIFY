@@ -388,8 +388,6 @@ def write_to_csv(batch_data, file_path, first_write=False):
     except Exception as e:
         print(f"Error writing to {file_path}: {e}")
 
-first_write_train = True
-first_write_test = True
 batch_size = 100
 train_buffer = []
 test_buffer = []
@@ -404,25 +402,33 @@ errors_by_algorithm = {}
 train_rows=1000
 test_rows=200
 
-print("Starting dataset encryption...")
+print("Starting dataset encryption (algorithm-wise)...")
 
-for idx, row in df.iterrows():
-    row_str = ','.join([str(val) if pd.notna(val) else '' for val in row.values])
+first_write_train = True
+first_write_test = True
+
+for func, cat, alg_type, alg_name in algorithm_mapping:
+    train_buffer = []
+    test_buffer = []
+    total_errors_algo = 0
     
-    for func, cat, alg_type, alg_name in algorithm_mapping:
+    print(f"\nEncrypting all rows with algorithm: {alg_name}")
+
+    for idx, row in df.iterrows():
+        row_str = ','.join([str(val) if pd.notna(val) else '' for val in row.values])
         try:
-            if alg_name in rsa_algorithms: 
+            if alg_name in rsa_algorithms:
                 encrypted_data = func(row_str, rsa_pubkey)
             else:
                 encrypted_data = func(row_str)
             
             row_data = [encrypted_data, cat, alg_type, alg_name]
-            
+
             if idx < train_rows:
                 train_buffer.append(row_data)
                 if len(train_buffer) >= batch_size:
                     write_to_csv(train_buffer, train_path, first_write=first_write_train)
-                    first_write_train = False
+                    first_write_train = False  
                     train_buffer = []
             elif idx < train_rows + test_rows:
                 test_buffer.append(row_data)
@@ -430,35 +436,30 @@ for idx, row in df.iterrows():
                     write_to_csv(test_buffer, test_path, first_write=first_write_test)
                     first_write_test = False
                     test_buffer = []
-                    
+
         except Exception as e:
             total_errors += 1
-            if alg_name not in errors_by_algorithm:
-                errors_by_algorithm[alg_name] = 0
-            errors_by_algorithm[alg_name] += 1
+            total_errors_algo += 1
+            errors_by_algorithm[alg_name] = errors_by_algorithm.get(alg_name, 0) + 1
             print(f"Error on row {idx} with {alg_name}: {e}")
+        
+        if idx % 100 == 0:
+            print(f"Processed {idx+1}/{len(df)} rows for {alg_name}")
 
-    total_processed += 1
-    if idx % 100 == 0:
-        print(f"Processed {idx+1}/{len(df)} rows ({((idx+1)/len(df)*100):.1f}%)")
+    if train_buffer:
+        write_to_csv(train_buffer, train_path, first_write=first_write_train)
+        first_write_train = False
+    if test_buffer:
+        write_to_csv(test_buffer, test_path, first_write=first_write_test)
+        first_write_test = False
 
-if train_buffer:
-    write_to_csv(train_buffer, train_path, first_write=first_write_train)
-if test_buffer:
-    write_to_csv(test_buffer, test_path, first_write=first_write_test)
+    print(f"Completed encryption with {alg_name}. Errors: {total_errors_algo}")
 
 print("\n" + "="*50)
-print("ENCRYPTION COMPLETE!")
-print(f"Total rows processed: {total_processed}")
+print("ALL ENCRYPTION COMPLETE!")
+print(f"Total rows processed: {len(df)}")
 print(f"Total errors: {total_errors}")
-print(f"Train/Test split: {train_rows}/{test_rows}")
-
 if errors_by_algorithm:
     print("\nErrors by algorithm:")
     for alg, count in errors_by_algorithm.items():
         print(f"  {alg}: {count} errors")
-
-print(f"\nOutput files:")
-print(f"  Train: {train_path}")
-print(f"  Test: {test_path}")
-print("="*50)
