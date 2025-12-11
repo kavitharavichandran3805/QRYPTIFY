@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState } from "react";
 import {
   MessageCircle,
   FileText,
@@ -8,35 +8,169 @@ import {
   HelpCircle,
   Sparkles,
   CheckCircle,
+  X,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { api } from "./api.js";
-import { AuthContext } from '../AuthContext.jsx';
-import { useNavigate } from 'react-router-dom'
+import { AuthContext } from "../AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
+import Chatbot from "./Chatbot.jsx";
+
+// Explore Modal Component
+const ExploreModal = ({ onClose }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white bg-opacity-90 backdrop-blur-lg rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-blue-200 p-8 md:p-12">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900 tracking-tight">
+          Explore Resources
+        </h1>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 text-2xl p-2 hover:bg-gray-100 rounded-xl transition-all"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+      <p className="text-lg md:text-xl text-blue-700 mb-8 leading-relaxed">
+        Access a curated collection of comprehensive FAQs, hands-on tutorials,
+        and top cryptography best practices designed to empower your journeys
+        in data protection and analysis.
+      </p>
+      <ul className="list-disc list-inside space-y-4 text-blue-800 text-lg md:text-xl">
+        <li>Detailed encryption tool guides with walkthroughs</li>
+        <li>Use-case scenarios and practical workflows</li>
+        <li>Step-by-step troubleshooting for frequent questions</li>
+        <li>Interactive demos and video tutorials</li>
+      </ul>
+    </div>
+  </div>
+);
+
+// Updates Modal Component
+const UpdatesModal = ({ onClose }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-gradient-to-tr from-white to-blue-50 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-cyan-300 p-8 md:p-12">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-cyan-700 tracking-widest">
+          Latest Updates
+        </h1>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 text-2xl p-2 hover:bg-white/50 rounded-xl transition-all"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+      <p className="text-lg md:text-xl text-cyan-900 mb-8 leading-relaxed">
+        Stay ahead with our continuous advancements in cryptography and file
+        analysis technology. Here's what's new at Qryptify:
+      </p>
+      <div className="space-y-6">
+        <div className="bg-white/70 rounded-xl px-6 py-4 shadow-inner border border-cyan-200">
+          <strong className="text-lg">🚀 Faster Processing:</strong> Significantly improved
+          algorithm detection speeds for real-time analysis.
+        </div>
+        <div className="bg-white/70 rounded-xl px-6 py-4 shadow-inner border border-cyan-200">
+          <strong className="text-lg">🔒 Enhanced Security:</strong> Introducing multi-factor
+          authentication and encrypted session validation.
+        </div>
+        <div className="bg-white/70 rounded-xl px-6 py-4 shadow-inner border border-cyan-200">
+          <strong className="text-lg">✨ New Features:</strong> Added support for post-quantum
+          cryptography and detailed key management reports.
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Read Modal Component
+const ReadModal = ({ onClose }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 p-8 md:p-12">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-blue-800 tracking-tight">
+          Whitepapers & Research
+        </h1>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 text-2xl p-2 hover:bg-gray-100 rounded-xl transition-all"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+      <p className="text-lg md:text-xl text-gray-700 mb-8 leading-relaxed">
+        Dive deep into the technical foundations and innovative research behind
+        Qryptify&apos;s cryptographic methods and data analysis framework.
+      </p>
+      <ul className="list-disc list-inside text-blue-700 space-y-4 text-lg md:text-xl">
+        <li>
+          <strong>Algorithmic Analysis Whitepaper</strong>: Comprehensive
+          overview of AI-driven crypto analysis.
+        </li>
+        <li>
+          <strong>Quantum-Resistant Cryptography</strong>: Details on
+          post-quantum cryptography integrations.
+        </li>
+        <li>
+          <strong>Performance Benchmarks</strong>: Detailed testing methodology
+          and result reports.
+        </li>
+      </ul>
+    </div>
+  </div>
+);
+
+// Chatbot Modal Component (Ping Us)
+const ChatbotModal = ({ onClose }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col border border-sky-200">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-sky-900 tracking-tight">
+          Chat with Qryptify AI
+        </h1>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-xl transition-all"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+      <div className="flex-1 overflow-hidden p-4">
+        <Chatbot />
+      </div>
+    </div>
+  </div>
+);
 
 export default function HelpSection() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [query, setQuery] = useState("");
-  const { accessToken } = useContext(AuthContext)
-  const navigate = useNavigate()
+  const [activeModal, setActiveModal] = useState(null);
+  const { accessToken } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const checkUser = async () => {
     try {
       const result = await api("user-details", "GET", null, accessToken);
       if (result.status) {
-        setShowContactForm(true)
+        setShowContactForm(true);
       } else {
-        handleContactClick()
+        handleContactClick();
       }
     } catch (err) {
-      handleContactClick()
+      handleContactClick();
     }
-  }
+  };
 
   const handleSendQuery = async () => {
     try {
-      const send_mail = await api("issue-mail", "POST", { message: query }, accessToken);
+      const send_mail = await api(
+        "issue-mail",
+        "POST",
+        { message: query },
+        accessToken
+      );
       if (send_mail.status) {
         setShowContactForm(false);
         setShowSuccessPopup(true);
@@ -57,7 +191,7 @@ export default function HelpSection() {
       description:
         "Access a curated collection of FAQs, troubleshooting tips, and best practices to help you resolve common questions quickly.",
       action: "Explore Resources",
-      path: "/explore"
+      modal: "explore",
     },
     {
       icon: <Video className="w-6 h-6" />,
@@ -65,7 +199,7 @@ export default function HelpSection() {
       description:
         "Stay informed with the latest Qryptify enhancements, feature releases, and cryptography insights directly from our team.",
       action: "See Updates",
-      path: "/updates"
+      modal: "updates",
     },
     {
       icon: <MessageCircle className="w-6 h-6" />,
@@ -73,7 +207,7 @@ export default function HelpSection() {
       description:
         "Get real-time assistance from our cryptography experts available 24/7 to help with your analysis needs.",
       action: "Ping Us",
-      path: "/ping"
+      modal: "ping", // will open ChatbotModal
     },
     {
       icon: <Users className="w-6 h-6" />,
@@ -81,7 +215,7 @@ export default function HelpSection() {
       description:
         "Dive into in-depth papers and technical research highlighting cryptographic methodologies behind Qryptify.",
       action: "Read More",
-      path: "/read"
+      modal: "read",
     },
   ];
 
@@ -109,10 +243,14 @@ export default function HelpSection() {
   ];
 
   const handleContactClick = () => {
-    const loginSection = document.getElementById('login');
+    const loginSection = document.getElementById("login");
     if (loginSection) {
-      loginSection.scrollIntoView({ behavior: 'smooth' });
+      loginSection.scrollIntoView({ behavior: "smooth" });
     }
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
   };
 
   return (
@@ -139,7 +277,7 @@ export default function HelpSection() {
             <div
               key={index}
               className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-lg transition-all duration-300 group cursor-pointer"
-              onClick={() => navigate(resource.path)}
+              onClick={() => setActiveModal(resource.modal)}
             >
               <div className="text-blue-600 mb-4 group-hover:scale-110 transition-transform duration-300">
                 {resource.icon}
@@ -159,7 +297,7 @@ export default function HelpSection() {
         </div>
 
         {/* FAQs + Support Section */}
-        <div className="grid lg:grid-cols-2 gap-12 items-stretch">
+        <div id="faq" className="grid lg:grid-cols-2 gap-12 items-stretch">
           {/* FAQ Section */}
           <div>
             <h3 className="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
@@ -175,7 +313,9 @@ export default function HelpSection() {
                   <h4 className="text-lg font-semibold text-gray-900 mb-3">
                     {faq.question}
                   </h4>
-                  <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                  <p className="text-gray-600 leading-relaxed">
+                    {faq.answer}
+                  </p>
                 </div>
               ))}
             </div>
@@ -183,10 +323,7 @@ export default function HelpSection() {
 
           {/* Personalized Support Section */}
           <div className="bg-gradient-to-br from-blue-600 to-cyan-500 p-8 rounded-3xl text-white flex flex-col justify-between min-h-full">
-
-            <h3 className="text-2xl font-bold mb-4">
-              Need Personalized Support?
-            </h3>
+            <h3 className="text-2xl font-bold mb-4">Need Personalized Support?</h3>
             <div className="space-y-6 mb-8">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-cyan-300 animate-pulse flex-shrink-0" />
@@ -213,7 +350,6 @@ export default function HelpSection() {
                 </p>
               </div>
             </div>
-
             <div className="flex items-start gap-3 mb-8">
               <Sparkles className="w-5 h-5 text-cyan-300 animate-pulse flex-shrink-0" />
               <p className="text-blue-100 leading-relaxed">
@@ -223,17 +359,13 @@ export default function HelpSection() {
                 resilience, and peace of mind.
               </p>
             </div>
-
-            {/* Extra Benefits List */}
             <ul className="list-disc list-inside space-y-2 mb-8 text-blue-100">
               <li>1-on-1 implementation guidance</li>
               <li>Custom integration solutions</li>
               <li>Priority technical support</li>
             </ul>
-
-            {/* Call to Action Button */}
             <Button
-              onClick={() => checkUser()}
+              onClick={checkUser}
               className="bg-white text-blue-600 hover:bg-blue-50 px-8"
             >
               Contact Expert Team
@@ -292,6 +424,12 @@ export default function HelpSection() {
           </div>
         </div>
       )}
+
+      {/* Resource Modals */}
+      {activeModal === "explore" && <ExploreModal onClose={closeModal} />}
+      {activeModal === "updates" && <UpdatesModal onClose={closeModal} />}
+     {activeModal === "ping" && <ChatbotModal onClose={closeModal} />}   
+      {activeModal === "read" && <ReadModal onClose={closeModal} />}
     </section>
   );
 }

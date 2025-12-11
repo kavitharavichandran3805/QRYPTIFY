@@ -1,3 +1,7 @@
+
+
+// learn more scroll
+
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation.jsx";
@@ -19,33 +23,51 @@ function HomePage({ resetDashboardFlag, onResetDashboardFlag }) {
 
   // Smooth scroll to login section
   const handleGetStarted = async () => {
-  try {
-    const result = await api("user-details", "GET"); // check if user is logged in
-    if (result.status) {
-      setShowDashboard(true); // logged in → show AnalysisPage
-    } else {
+    try {
+      const result = await api("user-details", "GET");
+      if (result.status) {
+        setShowDashboard(true);
+      } else {
+        const loginSection = document.getElementById("login");
+        if (loginSection) {
+          loginSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    } catch (err) {
       const loginSection = document.getElementById("login");
       if (loginSection) {
-        loginSection.scrollIntoView({ behavior: "smooth" }); // not logged in → scroll to login
+        loginSection.scrollIntoView({ behavior: "smooth" });
       }
     }
-  } catch (err) {
-    const loginSection = document.getElementById("login");
-    if (loginSection) {
-      loginSection.scrollIntoView({ behavior: "smooth" });
-    }
-  }
-};
+  };
 
+  const scrollToWithOffset = (id, offset = 120) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const targetY = rect.top + scrollTop - offset;
+    window.scrollTo({ top: targetY, behavior: "smooth" });
+  };
 
   // Navigation among home page sections
   const handleNavigate = (sectionId) => {
-    setActiveSection(sectionId);
     if (sectionId === "dashboard") {
       setShowDashboard(true);
       return;
     }
+
     setShowDashboard(false);
+
+    // Learn More → "faq"
+    if (sectionId === "faq") {
+      scrollToWithOffset("faq", 120);
+      setActiveSection("help");
+      return;
+    }
+
+    setActiveSection(sectionId);
+
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
@@ -61,6 +83,7 @@ function HomePage({ resetDashboardFlag, onResetDashboardFlag }) {
 
   useEffect(() => {
     if (showDashboard) return;
+
     const handleScroll = () => {
       const sections = ["home", "about", "help", "login"];
       const scrollPosition = window.scrollY + 100;
@@ -78,6 +101,7 @@ function HomePage({ resetDashboardFlag, onResetDashboardFlag }) {
         }
       }
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [showDashboard]);
@@ -89,7 +113,10 @@ function HomePage({ resetDashboardFlag, onResetDashboardFlag }) {
       ) : (
         <>
           <Navigation active={activeSection} onNavigate={handleNavigate} />
-          <HeroSection onGetStarted={handleGetStarted} />
+          <HeroSection
+            onGetStarted={handleGetStarted}
+            onNavigate={handleNavigate}
+          />
           <AboutSection />
           <HelpSection />
           <LoginSection onSuccess={() => handleNavigate("dashboard")} />
@@ -135,14 +162,10 @@ export default function App() {
           element={<AnalysisPage onLogout={() => setResetDashboardFlag(true)} />}
         />
         <Route path="/account" element={<MyAccount />} />
-
-        {/* New routes for cards */}
         <Route path="/explore" element={<Explore />} />
         <Route path="/updates" element={<Updates />} />
         <Route path="/ping" element={<Ping />} />
         <Route path="/read" element={<Read />} />
-
-        {/* Catch-all 404 */}
         <Route
           path="*"
           element={<div className="text-2xl text-center mt-24">404 Not Found</div>}

@@ -133,7 +133,7 @@ export async function api(endpoint, method, body = null, token = null) {
       options.headers["Authorization"] = `Bearer ${token}`;
     } else {
       // Only refresh if endpoint is not login/signup/csrf-token
-      if (!["login", "signup", "csrf-token"].includes(cleanEndpoint)) {
+      if (!["login", "csrf-token"].includes(cleanEndpoint)) {
         const newAccessToken = await refreshAccessToken("refresh-token", "GET");
         if (newAccessToken.status && newAccessToken.access) {
           options.headers["Authorization"] = `Bearer ${newAccessToken.access}`;

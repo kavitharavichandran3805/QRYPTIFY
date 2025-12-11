@@ -106,6 +106,7 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer',
 }
 
+AUTH_USER_MODEL = "home.User"
 
 
 REST_FRAMEWORK = {
@@ -156,7 +157,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'home',
+    'home.apps.HomeConfig',
     'rest_framework',
     'api',
     'rest_framework_simplejwt',

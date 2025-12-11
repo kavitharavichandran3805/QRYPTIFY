@@ -13,6 +13,7 @@ import {
   XCircle,
   Eye,
   EyeOff,
+  UserCircle,
 } from 'lucide-react';
 import { api } from './api';
 import { AuthContext } from '../AuthContext.jsx';
@@ -21,6 +22,7 @@ export default function LoginSection({ onSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -28,12 +30,14 @@ export default function LoginSection({ onSuccess }) {
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'guest', 
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [apiStatus, setApiStatus] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
+
   const { setAccessToken } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -54,7 +58,6 @@ export default function LoginSection({ onSuccess }) {
           navigate('/');
         }, 2500);
       } else {
-        console.log("Login failed")
         setApiStatus(false);
         setShowPopup(true);
         setTimeout(() => setShowPopup(false), 2500);
@@ -68,29 +71,38 @@ export default function LoginSection({ onSuccess }) {
 
   async function signup() {
     try {
-      const result = await api('signup', 'POST', {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        rememberMe,
-      });
+      const getUser=await api('user-details','GET');
+      if(getUser.status && (getUser.user.role=='admin' || getUser.user.role=='Admin')){
+        console.log("Admin creating a account");
+          const result = await api('signup', 'POST', {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+            rememberMe,
+          });
 
-      if (result.status) {
-        setAccessToken(result.access);
-        setApiStatus(true);
-        setShowPopup(true);
-        setTimeout(() => {
-          setShowPopup(false);
-          if (onSuccess) onSuccess();
-          navigate('/');
-        }, 2500);
-      } else {
-        setApiStatus(false);
-        setShowPopup(true);
-        setTimeout(() => setShowPopup(false), 2500);
+          if (result.status) {
+            setAccessToken(result.access);
+            setApiStatus(true);
+            setShowPopup(true);
+            setTimeout(() => {
+              setShowPopup(false);
+              if (onSuccess) onSuccess();
+              navigate('/');
+            }, 2500);
+          } else {
+            setApiStatus(false);
+            setShowPopup(true);
+            setTimeout(() => setShowPopup(false), 2500);
+          }
       }
+      else{
+        alert("You are not allowed to create an user")
+      }
+
     } catch {
       setApiStatus(false);
       setShowPopup(true);
@@ -100,7 +112,6 @@ export default function LoginSection({ onSuccess }) {
 
   async function resetPassword() {
     try {
-      console.log("inside the reset password method")
       const result = await api('reset-password', 'PATCH', {
         email: formData.email,
         newPassword: formData.password,
@@ -215,6 +226,7 @@ export default function LoginSection({ onSuccess }) {
                           value={formData.firstName}
                           onChange={handleChange}
                           placeholder="First Name"
+                          className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           required
                         />
                       </div>
@@ -228,6 +240,7 @@ export default function LoginSection({ onSuccess }) {
                           value={formData.lastName}
                           onChange={handleChange}
                           placeholder="Last Name"
+                          className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           required
                         />
                       </div>
@@ -244,9 +257,39 @@ export default function LoginSection({ onSuccess }) {
                           value={formData.username}
                           onChange={handleChange}
                           placeholder="Choose a username"
+                          className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           required
-                          className="pl-10"
                         />
+                      </div>
+                    </div>
+
+                    {/* Role Dropdown - UPDATED */}
+                    <div className="space-y-2">
+                      <Label htmlFor="role" className="text-gray-700">
+                        Role
+                      </Label>
+                      <div className="relative">
+                        <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                        <select
+                          id="role"
+                          value={formData.role}
+                          onChange={handleChange}
+                          className="w-full h-12 pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer transition-colors"
+                          required
+                        >
+                          <option value="guest">Guest</option>
+                          <option value="researcher">Researcher</option>
+                          <option value="auditor">Auditor</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        <svg
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
                       </div>
                     </div>
                   </>
@@ -265,13 +308,13 @@ export default function LoginSection({ onSuccess }) {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="Enter your email"
+                      className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       required
-                      className="pl-10"
                     />
                   </div>
                 </div>
 
-                {/* Password fields */}
+                {/* Password */}
                 {!isForgotPassword && (
                   <div className="space-y-2">
                     <Label htmlFor="password" className="text-gray-700">
@@ -285,87 +328,111 @@ export default function LoginSection({ onSuccess }) {
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="Enter your password"
+                        className="pl-10 pr-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         required
-                        className="pl-10 pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        {showPassword ? <Eye /> : <EyeOff />}
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                   </div>
                 )}
 
-                              {isForgotPassword && (
-                <>
-                  {/* New Password */}
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-gray-700">
-                      New Password
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <Input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Enter new password"
-                        required
-                        className="pl-10 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      >
-                        {showPassword ? <Eye /> : <EyeOff />}
-                      </button>
+                {/* Forgot Password */}
+                {isForgotPassword && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-gray-700">
+                        New Password
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Input
+                          id="password"
+                          type={showPassword ? 'text' : 'password'}
+                          value={formData.password}
+                          onChange={handleChange}
+                          placeholder="Enter new password"
+                          className="pl-10 pr-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword" className="text-gray-700">
+                        Confirm Password
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Input
+                          id="confirmPassword"
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          placeholder="Confirm your new password"
+                          className="pl-10 pr-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
 
-                  {/* Confirm Password */}
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-gray-700">
-                      Confirm Password
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        placeholder="Confirm your new password"
-                        required
-                        className="pl-10 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      >
-                        {showConfirmPassword ? <Eye /> : <EyeOff />}
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
                 {/* Remember Me + Forgot Password */}
-                {!isForgotPassword && (
+                {/* {!isForgotPassword && (
                   <div className="flex items-center justify-between">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="rounded border-gray-300"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       <span className="ml-2 text-sm text-gray-600">Remember me</span>
                     </label>
+                    {!isSignUp && (
+                      <button
+                        type="button"
+                        onClick={() => setIsForgotPassword(true)}
+                        className="text-sm text-blue-600 hover:text-blue-700"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                )} */}
+
+                {/* Remember Me + Forgot Password */}
+                {!isForgotPassword && !isSignUp && (
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                    </label>
+
                     <button
                       type="button"
                       onClick={() => setIsForgotPassword(true)}
@@ -376,14 +443,15 @@ export default function LoginSection({ onSuccess }) {
                   </div>
                 )}
 
+
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold shadow-lg"
+                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-semibold shadow-lg"
                 >
                   {isForgotPassword
                     ? 'Reset Password'
                     : isSignUp
-                    ? 'Sign Up'
+                    ? 'Create User'
                     : 'Sign In'}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
@@ -405,54 +473,75 @@ export default function LoginSection({ onSuccess }) {
                       </>
                     ) : (
                       <>
-                        Don't have an account?{' '}
+                        Admin access required | {' '}
                         <button
                           onClick={() => setIsSignUp(true)}
                           className="text-blue-600 hover:text-blue-700 font-medium"
                         >
-                          Sign up for free
+                          Create a new user account
                         </button>
                       </>
                     )}
                   </p>
                 </div>
               )}
+
+              {/* Back to login from forgot password */}
+              {isForgotPassword && (
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => setIsForgotPassword(false)}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    ← Back to login
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
         {/* Popup Overlay */}
-          {showPopup && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
-              <div className="bg-white rounded-2xl shadow-2xl p-8 text-center animate-fadeIn max-w-sm w-full">
-                {apiStatus ? (
-                  <>
-                    <div className="flex items-center justify-center mb-4">
-                      <div className="bg-green-100 p-3 rounded-full">
-                        <CheckCircle className="w-12 h-12 text-green-500 animate-bounce" />
-                      </div>
+        {showPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 text-center animate-fadeIn max-w-sm w-full">
+              {apiStatus ? (
+                <>
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="bg-green-100 p-3 rounded-full">
+                      <CheckCircle className="w-12 h-12 text-green-500 animate-bounce" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {isSignUp ? 'Signed up successfully!' : isForgotPassword ? 'Password reset successful!' : 'Logged in successfully!'}
-                    </h3>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-center mb-4">
-                      <div className="bg-red-100 p-3 rounded-full">
-                        <XCircle className="w-12 h-12 text-red-600 animate-shake" />
-                      </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {isSignUp
+                      ? 'User created successfully!'
+                      : isForgotPassword
+                      ? 'Password reset successful!'
+                      : 'Logged in successfully!'}
+                  </h3>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="bg-red-100 p-3 rounded-full">
+                      <XCircle className="w-12 h-12 text-red-600 animate-shake" />
                     </div>
-                    <h3 className="text-xl font-semibold text-red-700">
-                      {isSignUp ? 'Signup failed!' : isForgotPassword ? 'Password reset failed!' : 'Login failed!'}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Please try again.
-                    </p>
-                  </>
-                )}
-              </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-red-700">
+                    {isSignUp
+                      ? 'Unable to create user!'
+                      : isForgotPassword
+                      ? 'Password reset failed!'
+                      : 'Login failed!'}
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Please try again.
+                  </p>
+                </>
+              )}
             </div>
-          )}
+          </div>
+        )}
       </div>
     </section>
   );
