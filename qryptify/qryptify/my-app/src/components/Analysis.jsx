@@ -19,29 +19,25 @@ const createPageUrl = (page) => (page === 'Home' ? '/' : '/analysis');
 
 // Mock upload file API
 async function UploadFile({ file }) {
-  return new Promise((resolve) =>
-    setTimeout(() => resolve({ file_url: 'https://example.com/uploaded/' + file.name }), 1000)
-  );
+  try{
+    const formData=new FormData();
+    formData.append('file',file);
+    const result=await api('analyze-input-file','POST',formData)
+    if(result.status){
+      console.log("successfully processed the file");
+      return result;
+    }
+    else{
+      console.log("error in processing the file")
+    }
+  }
+  catch(e){
+    console.log(e)
+    alert("Error in uploading the file");
+  }
 }
 
-// Mock extraction API
-async function ExtractDataFromUploadedFile({ file_url, json_schema }) {
-  return new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve({
-          algorithms: [
-            { name: 'AES-256', confidence_score: 0.95 },
-            { name: 'RSA-2048', confidence_score: 0.78 },
-            { name: 'ChaCha20', confidence_score: 0.65 },
-          ],
-        }),
-      1500
-    )
-  );
-}
 
-// ---------- HEADER ----------
 const AppHeader = ({ onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
@@ -239,24 +235,31 @@ const ResultsDisplay = ({ result, isLoading, error }) => {
       </div>
     );
 
-  const topAlgorithm = result.algorithms.reduce(
-    (max, algo) => (algo.confidence_score > max.confidence_score ? algo : max),
-    result.algorithms[0]
-  );
+  const topAlgorithm = {
+  name: result.predicted_algorithm,
+  confidence_score: result.predicted_algorithm_confidence_score / 100
+  };
 
-  return (
+
+   return (
     <div className="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl shadow-2xl p-8 h-full text-white flex flex-col items-center justify-center text-center">
-      <h3 className="text-xl font-medium text-blue-100 mb-2">Top Algorithm Detected</h3>
-      <h2 className="text-5xl font-bold mb-4">{topAlgorithm.name}</h2>
+      <h3 className="text-xl font-medium text-blue-100 mb-2">
+        Top Algorithm Detected
+      </h3>
+
+      <h2 className="text-5xl font-bold mb-4">
+        {topAlgorithm.name}
+      </h2>
+
       <div className="text-7xl font-bold bg-white/20 rounded-full w-40 h-40 flex items-center justify-center border-4 border-white/50">
-        {Math.round(topAlgorithm.confidence_score * 100)}
+        {result.predicted_algorithm_confidence_score}
         <span className="text-3xl mt-2">%</span>
       </div>
+
       <p className="text-blue-200 mt-4">Confidence Score</p>
     </div>
   );
 };
-
 // ---------- MAIN PAGE ----------
 export default function AnalysisPage({ onForceHome }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -269,29 +272,11 @@ export default function AnalysisPage({ onForceHome }) {
     setError(null);
 
     try {
-      const { file_url } = await UploadFile({ file });
-      const schema = {
-        type: 'object',
-        properties: {
-          algorithms: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                confidence_score: { type: 'number' },
-              },
-              required: ['name', 'confidence_score'],
-            },
-          },
-        },
-        required: ['algorithms'],
-      };
-      const output = await ExtractDataFromUploadedFile({ file_url, json_schema: schema });
-      if (output && output.algorithms) {
-        setAnalysisResult(output);
+      const algorithms_prediction = await UploadFile({ file });
+      if (algorithms_prediction && algorithms_prediction.predicted_algorithm) {
+         setAnalysisResult(algorithms_prediction);   
       } else {
-        setError("AI could not process the file. Please ensure it's a valid encrypted text file.");
+        setError("Backend returned incomplete results");
       }
     } catch (e) {
       console.error(e);

@@ -295,6 +295,9 @@ best_model_name = max(
 
 print(f"\n✨ RECOMMENDATION: Use {best_model_name} Model (highest accuracy)")
 
+# Create algorithm metadata lookup table
+algo_metadata = df[['Algorithm', 'Category', 'Algorithm_Type']].drop_duplicates().reset_index(drop=True)
+
 def predict_algorithm(sample_features, use_ensemble=True):
     sample_scaled = pd.DataFrame(scaler.transform(sample_features), 
                                  columns=sample_features.columns)
@@ -311,12 +314,37 @@ def predict_algorithm(sample_features, use_ensemble=True):
         
         hier_prob = hier_algo_model.predict_proba(sample_with_both)[0]
         combined_prob = (direct_acc * direct_prob + hier_acc * hier_prob) / (direct_acc + hier_acc)
+        
+        # Get the predicted algorithm (top 1)
         pred_idx = np.argmax(combined_prob)
-        top5_idx = np.argsort(combined_prob)[-5:][::-1]
-        top5_algos = [(le_algo.inverse_transform([idx])[0], combined_prob[idx]) 
-                      for idx in top5_idx]
+        pred_algo = le_algo.inverse_transform([pred_idx])[0]
+        
+        # Get top 6 (to exclude the predicted one and get next 5)
+        top6_idx = np.argsort(combined_prob)[-6:][::-1]
+        
+        # Remove the predicted algorithm and get next 5
+        top5_idx = [idx for idx in top6_idx if idx != pred_idx][:5]
+        
+        # For each algorithm in top5, get its category and type
+        top5_algos = []
+        for idx in top5_idx:
+            algo_name = le_algo.inverse_transform([idx])[0]
+            confidence = combined_prob[idx]
+            
+            # Get category and type for this algorithm from metadata
+            algo_row = algo_metadata[algo_metadata['Algorithm'] == algo_name].iloc[0]
+            algo_category = algo_row['Category']
+            algo_type = algo_row['Algorithm_Type']
+            
+            top5_algos.append({
+                "algorithm": algo_name,
+                "confidence": confidence * 100,
+                "category": algo_category,
+                "type": algo_type
+            })
+        
         return {
-            "algorithm": le_algo.inverse_transform([pred_idx])[0],
+            "algorithm": pred_algo,
             "confidence": combined_prob[pred_idx] * 100,
             "category": le_cat.inverse_transform([cat_pred_sample])[0],
             "type": le_type.inverse_transform([type_pred_sample])[0],
@@ -325,13 +353,32 @@ def predict_algorithm(sample_features, use_ensemble=True):
     else:
         direct_prob = direct_model.predict_proba(sample_scaled)[0]
         pred_idx = np.argmax(direct_prob)
+        pred_algo = le_algo.inverse_transform([pred_idx])[0]
         
-        top5_idx = np.argsort(direct_prob)[-5:][::-1]
-        top5_algos = [(le_algo.inverse_transform([idx])[0], direct_prob[idx]) 
-                      for idx in top5_idx]
+        # Get top 6 to exclude predicted and get next 5
+        top6_idx = np.argsort(direct_prob)[-6:][::-1]
+        top5_idx = [idx for idx in top6_idx if idx != pred_idx][:5]
+        
+        # For each algorithm in top5, get its category and type
+        top5_algos = []
+        for idx in top5_idx:
+            algo_name = le_algo.inverse_transform([idx])[0]
+            confidence = direct_prob[idx]
+            
+            # Get category and type for this algorithm from metadata
+            algo_row = algo_metadata[algo_metadata['Algorithm'] == algo_name].iloc[0]
+            algo_category = algo_row['Category']
+            algo_type = algo_row['Algorithm_Type']
+            
+            top5_algos.append({
+                "algorithm": algo_name,
+                "confidence": confidence * 100,
+                "category": algo_category,
+                "type": algo_type
+            })
         
         return {
-            "algorithm": le_algo.inverse_transform([pred_idx])[0],
+            "algorithm": pred_algo,
             "confidence": direct_prob[pred_idx] * 100,
             "top5": top5_algos
         }
@@ -349,10 +396,11 @@ if 'category' in result:
     print(f"   Category: {result['category']}")
     print(f"   Type: {result['type']}")
 
-print("\n📊 Top 5 Predictions:")
-for i, (alg, prob) in enumerate(result['top5'], 1):
-    bar = "█" * int(prob * 50)  # Visual bar
-    print(f"   {i}. {alg:<25} {prob*100:>6.2f}% {bar}")
+print("\n📊 Top 5 Alternative Predictions:")
+for i, pred in enumerate(result['top5'], 1):
+    bar = "█" * int(pred['confidence'] * 0.5)  # Visual bar (scaled down)
+    print(f"   {i}. {pred['algorithm']:<20} {pred['confidence']:>6.2f}% {bar}")
+    print(f"      └─ Category: {pred['category']}, Type: {pred['type']}")
 
 print("\n\n" + "="*70)
 print("💾 SAVING MODELS")
@@ -370,6 +418,9 @@ joblib.dump(le_algo, "le_algo.joblib")
 
 joblib.dump({'direct_acc': direct_acc, 'hier_acc': hier_acc}, "model_weights.joblib")
 
+# Save the algorithm metadata for production use
+joblib.dump(algo_metadata, "algo_metadata.joblib")
+
 print("\n✓ All models saved successfully!")
 print("\n📁 Saved files:")
 print("   • direct_algo_model.joblib (Direct classifier)")
@@ -379,8 +430,8 @@ print("   • type_model.joblib (Type classifier)")
 print("   • feature_scaler.joblib ⚠️  REQUIRED for predictions")
 print("   • le_cat.joblib, le_type.joblib, le_algo.joblib (Label encoders)")
 print("   • model_weights.joblib (Ensemble weights)")
+print("   • algo_metadata.joblib (Algorithm category/type lookup)")
 
 print("\n" + "="*70)
 print("✨ TRAINING COMPLETE!")
 print("="*70)
-

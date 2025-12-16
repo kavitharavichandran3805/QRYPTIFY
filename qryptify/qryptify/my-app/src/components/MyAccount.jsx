@@ -1,22 +1,16 @@
-
-
-
-
-
-
-
-
-
-// changes given by kavitha 
-
-import React, { useState, useEffect } from 'react';
+// blue color border for back button 
+import React, { useState, useEffect, useContext } from 'react';
 import {
   User, Mail, Lock, Shield,
-  Activity, LogOut, Check, Sparkles,
-  ArrowRight, Cpu, Phone, Cake, Users, Calendar
+  Activity, Check, Sparkles,
+  ArrowRight, Cpu, Phone, Users, Calendar,
+  ArrowLeft, Eye, EyeOff
 } from 'lucide-react';
+import { api } from './api';
+import { AuthContext } from '../AuthContext.jsx'
+import { useNavigate } from 'react-router-dom';
 
-// Simple replacements for Card/Badge using div/span
+
 function Card({ className = '', children }) {
   return (
     <div className={`bg-white/80 backdrop-blur-sm border border-gray-100 shadow-xl rounded-3xl overflow-hidden ${className}`}>
@@ -53,16 +47,21 @@ function Btn({ className = '', children, ...props }) {
 }
 
 export default function MyAccount() {
+  const [originalProfile, setOriginalProfile] = useState(null);
+  const navigate = useNavigate();
+  const { accessToken, setAccessToken } = useContext(AuthContext);
   const [profile, setProfile] = useState({
-    name: 'Alice Johnson',
-    email: 'alice@qryptify.com',
-    phone: '+1 (555) 123-4567',
-    dob: 'yyyy-mm-dd',
-    emergencyContact: 'John Johnson (+1 (555) 987-6543)',
-    role: 'Researcher',
-    createdAt: '2024-01-10',
-    lastLogin: '2025-12-09 18:45',
-  });
+      firstName: "",
+      lastName: "",
+      email: "",
+      mobile: "",
+      username: "",
+      role: "",
+      createdAt: "",
+      lastLogin: "",
+      isActive:false,
+    });
+
 
   const [passwords, setPasswords] = useState({
     current: '',
@@ -70,11 +69,51 @@ export default function MyAccount() {
     confirm: '',
   });
 
+  const [showPasswords, setShowPasswords] = useState({
+  current: false,
+  newPass: false,
+  confirm: false,
+});
+
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // fake loading if needed
-  }, []);
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+
+      const data = await api('user-details', 'GET');
+
+      if (data.status) {
+        const mappedProfile = {
+          firstName: data.user.first_name || "",
+          lastName: data.user.last_name || "",
+          email: data.user.email || "",
+          mobile: data.user.phone || "",
+          username: data.user.username || "",
+          role: data.user.role || "",
+          createdAt: data.user.date_joined || "",
+          lastLogin: data.user.last_login || "",
+          isActive: Boolean(data.user.is_active),
+        };
+        setProfile(mappedProfile);
+        setOriginalProfile(mappedProfile); 
+      } else {
+        alert("Error occurred in navigating My Account section");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Unable to load profile details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProfile();
+}, []);
+
+
 
   const handleProfileChange = (field, value) => {
     setProfile(prev => ({ ...prev, [field]: value }));
@@ -84,25 +123,91 @@ export default function MyAccount() {
     setPasswords(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSaveProfile = () => {
-    alert('Profile saved successfully!');
-  };
+  const togglePasswordVisibility = (field) => {
+  setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+};
 
-  const handleChangePassword = () => {
-    if (passwords.newPass !== passwords.confirm) {
-      alert('New passwords do not match!');
-      return;
+
+  const handleSaveProfile = async () => {
+  if (!originalProfile) return;
+
+  const payload = {};
+
+  if (profile.firstName !== originalProfile.firstName) {
+    payload.first_name = profile.firstName;
+  }
+
+  if (profile.lastName !== originalProfile.lastName) {
+    payload.last_name = profile.lastName;
+  }
+
+  if (profile.mobile !== originalProfile.mobile) {
+    payload.phone = profile.mobile;
+  }
+
+  if (profile.username !== originalProfile.username) {
+    payload.username = profile.username;
+  }
+
+  if (Object.keys(payload).length === 0) {
+    alert('No changes detected');
+    return;
+  }
+
+  const response = await api('update-profile', 'PATCH', payload);
+
+  if (response?.status) {
+    setOriginalProfile(profile); // sync snapshot
+    alert('Profile updated successfully');
+  } else {
+    alert('Profile update failed');
+  }
+};
+
+
+  const handleChangePassword = async () => {
+    const { current, newPass, confirm } = passwords;
+    const result=await api('reset-password','PATCH',{
+      currentPassword:current,
+      newPassword:newPass,
+      confirmPassword:confirm
+    })
+    if(result.status){
+      alert("Password changed successfully")
     }
-    alert('Password updated!');
+    else{
+      alert("Error in resetting the password")
+    }
     setPasswords({ current: '', newPass: '', confirm: '' });
   };
 
-  const handleUpdateRole = () => {
-    alert('Role updated successfully!');
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+
+    setLoading(true); 
+    try {
+      const result = await api('user-account-delete', 'DELETE', null, accessToken);
+
+      if (result.status) {
+        setAccessToken(null);
+        alert('Account successfully deleted');
+        navigate('/'); 
+      } else {
+        alert(result.message || "Error in deleting the account");
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Unable to delete the account. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLogout = () => {
-    alert('Logged out from all devices');
+
+  const handleBack = () => {
+    window.history.back();
   };
 
   if (loading) {
@@ -118,6 +223,17 @@ export default function MyAccount() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Top Back Button - flush left */}
+      <div className="pt-6 pl-6">
+        <Btn
+          onClick={handleBack}
+          className="inline-flex items-center gap-2 rounded-full border border-sky-300 bg-sky-50/70 hover:bg-sky-100 text-black px-4 py-2 text-sm shadow-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Btn>
+      </div>
+
       {/* Hero Header */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-cyan-600/5"></div>
@@ -142,7 +258,7 @@ export default function MyAccount() {
               </div>
               <h1 className="text-4xl lg:text-5xl font-bold mb-2">
                 <span className="bg-gradient-to-r from-gray-900 via-blue-900 to-cyan-700 bg-clip-text text-transparent">
-                  {profile.name}
+                  {profile.username}
                 </span>
               </h1>
               <p className="text-xl text-gray-600 flex items-center justify-center lg:justify-start gap-2 mb-2">
@@ -163,10 +279,11 @@ export default function MyAccount() {
               </div>
 
               <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                <Badge className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 text-sm font-medium">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {profile.role} Role
-                </Badge>
+                <Badge className="capitalize bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 text-sm font-medium">
+  <Sparkles className="w-4 h-4 mr-2" />
+  {profile.role} Role
+</Badge>
+
                 <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 text-sm font-medium">
                   <Check className="w-4 h-4 mr-2" />
                   Active
@@ -177,9 +294,9 @@ export default function MyAccount() {
         </div>
       </section>
 
-      {/* Main Content - Row-wise sections */}
+      {/* Main Content */}
       <section className="max-w-7xl mx-auto px-6 pb-20">
-        {/* Personal Details - First Row */}
+        {/* Personal Details */}
         <Card className="mb-8">
           <div className="h-1 bg-gradient-to-r from-blue-600 to-cyan-500"></div>
           <CardHeader>
@@ -192,45 +309,42 @@ export default function MyAccount() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Full Name</label>
+              <label className="text-sm font-medium text-gray-700">First Name</label>
               <input
-                value={profile.name}
-                onChange={(e) => handleProfileChange('name', e.target.value)}
+                value={profile.firstName}
+                onChange={(e) => handleProfileChange('firstName', e.target.value)}
                 className="h-12 w-full rounded-xl border border-gray-200 px-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                placeholder="Enter your name"
+                placeholder="Enter your first name"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Last Name</label>
+              <input
+                value={profile.lastName}
+                onChange={(e) => handleProfileChange('lastName', e.target.value)}
+                className="h-12 w-full rounded-xl border border-gray-200 px-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                placeholder="Enter your last name"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                Phone Number
+                Mobile Number
               </label>
               <input
-                value={profile.phone}
-                onChange={(e) => handleProfileChange('phone', e.target.value)}
+                value={profile.mobile}
+                onChange={(e) => handleProfileChange('mobile', e.target.value)}
                 className="h-12 w-full rounded-xl border border-gray-200 px-3"
-                placeholder="Enter phone number"
+                placeholder="Enter mobile number"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Cake className="w-4 h-4" />
-                Date of Birth
-              </label>
+              <label className="text-sm font-medium text-gray-700">Username</label>
               <input
-                type="date"
-                value={profile.dob}
-                onChange={(e) => handleProfileChange('dob', e.target.value)}
+                value={profile.username}
+                onChange={(e) => handleProfileChange('username', e.target.value)}
                 className="h-12 w-full rounded-xl border border-gray-200 px-3"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Emergency Contact</label>
-              <input
-                value={profile.emergencyContact}
-                onChange={(e) => handleProfileChange('emergencyContact', e.target.value)}
-                className="h-12 w-full rounded-xl border border-gray-200 px-3"
-                placeholder="Enter emergency contact"
+                placeholder="Enter username"
               />
             </div>
             <Btn
@@ -243,7 +357,7 @@ export default function MyAccount() {
           </CardContent>
         </Card>
 
-        {/* Password Section - Second Row */}
+        {/* Password Section */}
         <Card className="mb-8">
           <div className="h-1 bg-gradient-to-r from-red-500 to-pink-500"></div>
           <CardHeader>
@@ -265,31 +379,78 @@ export default function MyAccount() {
               </Badge>
             </div>
             <div className="space-y-4">
-              <input
-                type="password"
-                name="current"
-                placeholder="Current Password"
-                value={passwords.current}
-                onChange={handlePasswordChange}
-                className="h-12 w-full rounded-xl border border-gray-200 px-3"
-              />
-              <input
-                type="password"
-                name="newPass"
-                placeholder="New Password"
-                value={passwords.newPass}
-                onChange={handlePasswordChange}
-                className="h-12 w-full rounded-xl border border-gray-200 px-3"
-              />
-              <input
-                type="password"
-                name="confirm"
-                placeholder="Confirm New Password"
-                value={passwords.confirm}
-                onChange={handlePasswordChange}
-                className="h-12 w-full rounded-xl border border-gray-200 px-3"
-              />
-            </div>
+
+  {/* Current Password */}
+  <div className="relative">
+    <input
+      type={showPasswords.current ? 'text' : 'password'}
+      name="current"
+      placeholder="Current Password"
+      value={passwords.current}
+      onChange={handlePasswordChange}
+      className="h-12 w-full rounded-xl border border-gray-200 px-3 pr-10"
+    />
+    <button
+      type="button"
+      onClick={() => togglePasswordVisibility('current')}
+      className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-blue-600"
+    >
+      {showPasswords.current ? (
+        <EyeOff className="w-5 h-5" />
+      ) : (
+        <Eye className="w-5 h-5" />
+      )}
+    </button>
+  </div>
+
+  {/* New Password */}
+  <div className="relative">
+    <input
+      type={showPasswords.newPass ? 'text' : 'password'}
+      name="newPass"
+      placeholder="New Password"
+      value={passwords.newPass}
+      onChange={handlePasswordChange}
+      className="h-12 w-full rounded-xl border border-gray-200 px-3 pr-10"
+    />
+    <button
+      type="button"
+      onClick={() => togglePasswordVisibility('newPass')}
+      className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-blue-600"
+    >
+      {showPasswords.newPass ? (
+        <EyeOff className="w-5 h-5" />
+      ) : (
+        <Eye className="w-5 h-5" />
+      )}
+    </button>
+  </div>
+
+  {/* Confirm Password */}
+  <div className="relative">
+    <input
+      type={showPasswords.confirm ? 'text' : 'password'}
+      name="confirm"
+      placeholder="Confirm New Password"
+      value={passwords.confirm}
+      onChange={handlePasswordChange}
+      className="h-12 w-full rounded-xl border border-gray-200 px-3 pr-10"
+    />
+    <button
+      type="button"
+      onClick={() => togglePasswordVisibility('confirm')}
+      className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-blue-600"
+    >
+      {showPasswords.confirm ? (
+        <EyeOff className="w-5 h-5" />
+      ) : (
+        <Eye className="w-5 h-5" />
+      )}
+    </button>
+  </div>
+
+</div>
+
             <Btn
               onClick={handleChangePassword}
               className="w-full h-12 rounded-xl border border-red-200 text-red-600 hover:bg-red-50"
@@ -299,8 +460,8 @@ export default function MyAccount() {
           </CardContent>
         </Card>
 
-        {/* Role Section - Third Row */}
-        <Card className="mb-16">
+        {/* Role Section - static with description */}
+        <Card className="mb-8">
           <div className="h-1 bg-gradient-to-r from-purple-600 to-indigo-600"></div>
           <CardHeader>
             <CardTitle className="flex items-center gap-3 text-xl">
@@ -310,86 +471,27 @@ export default function MyAccount() {
               Role
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">
                 Account Role
               </label>
-              <select
-                value={profile.role}
-                onChange={(e) => handleProfileChange('role', e.target.value)}
-                className="h-12 w-full rounded-xl border border-gray-200 px-3 bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-              >
-                <option value="Researcher">Researcher</option>
-                <option value="Auditor">Auditor</option>
-                <option value="Admin">Admin</option>
-                <option value="Developer">Developer</option>
-              </select>
+              <div className="capitalize h-12 w-full rounded-xl border border-gray-200 px-3 flex items-center bg-gray-50 text-gray-800">
+  {profile.role}
+</div>
+
             </div>
-            <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
-              <p className="text-sm text-gray-700 mb-2 flex items-center gap-2">
-                <Check className="w-4 h-4 text-purple-600" />
-                Role permissions updated instantly
-              </p>
-              <p className="text-xs text-gray-500">
-                Your access level will be updated across all Qryptify services
-              </p>
-            </div>
-            <Btn
-              onClick={handleUpdateRole}
-              className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-500 text-white shadow-lg hover:from-purple-700 hover:to-indigo-600"
-            >
-              Update Role
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Btn>
           </CardContent>
         </Card>
 
-        {/* Support & Logout Row */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Recent Activity & Logout */}
-          <Card>
-            <div className="h-1 bg-gradient-to-r from-cyan-500 to-blue-600"></div>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-3 bg-cyan-50 rounded-xl">
-                  <Activity className="w-6 h-6 text-cyan-600" />
-                </div>
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Btn
-                onClick={handleLogout}
-                className="w-full h-12 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 justify-start"
-              >
-                <LogOut className="w-5 h-5 mr-2" />
-                Log out from all devices
-              </Btn>
-            </CardContent>
-          </Card>
-
-          {/* Support Banner */}
-          <Card>
-            <div className="h-1 bg-gradient-to-r from-green-500 to-teal-500"></div>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-xl text-center">
-                <div className="p-3 bg-green-50 rounded-xl mx-auto">
-                  <Shield className="w-6 h-6 text-green-600" />
-                </div>
-                Need Help?
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              <p className="text-gray-600 max-w-md mx-auto">
-                Our support team is available 24/7 to assist you with any queries.
-              </p>
-              <Btn className="w-full lg:w-auto rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white px-8 py-3 shadow-xl">
-                <Mail className="w-5 h-5 mr-2" />
-                support@qryptify.com
-              </Btn>
-            </CardContent>
-          </Card>
+        {/* Delete Account only */}
+        <div className="flex flex-col gap-4">
+          <Btn
+            onClick={handleDeleteAccount}
+            className="w-full h-12 rounded-xl bg-red-600 text-white hover:bg-red-700 shadow-lg"
+          >
+            Delete Account
+          </Btn>
         </div>
       </section>
     </div>

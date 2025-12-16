@@ -85,13 +85,13 @@ export default function LoginSection({ onSuccess }) {
           });
 
           if (result.status) {
-            setAccessToken(result.access);
+            // setAccessToken(result.access);
             setApiStatus(true);
             setShowPopup(true);
             setTimeout(() => {
               setShowPopup(false);
-              if (onSuccess) onSuccess();
-              navigate('/');
+              // if (onSuccess) onSuccess();
+              // navigate('/');
             }, 2500);
           } else {
             setApiStatus(false);
@@ -112,7 +112,7 @@ export default function LoginSection({ onSuccess }) {
 
   async function resetPassword() {
     try {
-      const result = await api('reset-password', 'PATCH', {
+      const result = await api('forgot-password', 'PATCH', {
         email: formData.email,
         newPassword: formData.password,
         confirmPassword: formData.confirmPassword,

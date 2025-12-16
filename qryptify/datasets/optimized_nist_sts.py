@@ -324,10 +324,6 @@ def random_excursion_variant_test(binary):
 
     return results[:18]
 
-# ============================================================================
-# ENHANCED FEATURE EXTRACTION
-# ============================================================================
-
 def shannon_entropy_bits(binary):
     """Shannon entropy of bit distribution"""
     if binary.n == 0:
@@ -682,8 +678,8 @@ def process_one_row(row_dict):
 if __name__ == "__main__":
     import time
 
-    INPUT_FILE = r"C:\Users\Dell\Documents\cast_bits.csv"
-    OUTPUT_FILE = "cast_nist.csv"
+    INPUT_FILE = r"C:\Users\Dell\Desktop\DESKTOP_FOLDER\FINAL YEAR PROJECT\qryptify\datasets\sample_models\sample_bits.csv"
+    OUTPUT_FILE = "nistest1.csv"
 
     print("=" * 80)
     print("ENHANCED NIST TEST PROCESSOR WITH PARALLEL PROCESSING")
