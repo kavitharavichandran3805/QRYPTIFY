@@ -238,12 +238,13 @@ class SignupAPI(APIView):
         data = request.data.copy()
         serializer = UserSerializer(data=data)
         if not serializer.is_valid():
+            print(serializer.errors)
             return Response(
                 {"status": False, "message": serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST
             )
         user = serializer.save()
-
+        print('user details created')
         return Response(
                 {"status": True, "message": "User created successfully"},
                 status=status.HTTP_201_CREATED

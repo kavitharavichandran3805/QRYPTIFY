@@ -1,43 +1,83 @@
 from rest_framework import serializers
 from home.models import User
 
-
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(max_length=50, write_only=True)
+    password = serializers.CharField(max_length=128, write_only=True)  
     phone = serializers.CharField(max_length=15, required=False, allow_null=True, allow_blank=True)
+    limit = serializers.CharField(required=False, allow_null=True)  
     
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'username', 'password', 'email', 'role', 'phone', 'date_joined', 'last_login']
+        fields = ['id', 'first_name', 'last_name', 'username', 'password', 'email', 'role', 'phone', 'limit','date_joined', 'last_login']
         read_only_fields = ['id', 'date_joined', 'last_login']
     
+    def validate(self, data):
+        role = data.get('role', getattr(self.instance, 'role', 'guest'))
+        limit = data.get('limit', getattr(self.instance, 'limit', None))
+
+        if role == 'guest' and limit is None:
+            raise serializers.ValidationError(
+                {"limit": "Limit is required for guest users"}
+            )
+
+        if role != 'guest' and limit is not None:
+            raise serializers.ValidationError(
+                {"limit": "Limit is only allowed for guest users"}
+            )
+        return data
+
+    def to_internal_value(self, data):
+        data = data.copy()
+        limit = data.get('limit')
+        if limit in [None, '']:
+            data['limit'] = None
+        else:
+            try:
+                data['limit'] = int(limit)
+            except (TypeError, ValueError):
+                raise serializers.ValidationError(
+                    {"limit": "Must be an integer"}
+                )
+        return super().to_internal_value(data)
+    
+
     def create(self, validated_data):
-        # Remove phone if present (we don't want it during signup)
-        validated_data.pop('phone', None)
-        
         password = validated_data.pop('password')
+        role = validated_data.get('role','guest')
+        
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
-            role=validated_data.get('role', 'guest'),
+            role=role,
+            limit=validated_data.get('limit') if role=='guest' else None,
             password=password
         )
         return user
-    
+
     def update(self, instance, validated_data):
-        # Remove password from validated_data if present
-        # (handle password separately in the view)
-        validated_data.pop('password', None)
+        password = validated_data.pop('password', None)  
         
-        # Update allowed fields
+        # Get NEW role from request (not old instance.role)
+        new_role = validated_data.get('role', instance.role)
+        
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.username = validated_data.get('username', instance.username)
         instance.phone = validated_data.get('phone', instance.phone)
-        # role can be updated if needed
-        instance.role = validated_data.get('role', instance.role)
+        instance.role = new_role
+        
+        # Use NEW role for limit logic
+        if new_role == 'guest':
+            instance.limit = validated_data.get('limit', instance.limit)
+        else:
+            instance.limit = None
         
         instance.save()
+        
+        if password:
+            instance.set_password(password)
+            instance.save()
+        
         return instance

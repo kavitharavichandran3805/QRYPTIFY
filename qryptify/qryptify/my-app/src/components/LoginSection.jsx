@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -14,6 +14,8 @@ import {
   Eye,
   EyeOff,
   UserCircle,
+  Hash,
+  ChevronDown,
 } from 'lucide-react';
 import { api } from './api';
 import { AuthContext } from '../AuthContext.jsx';
@@ -31,15 +33,18 @@ export default function LoginSection({ onSuccess }) {
     password: '',
     confirmPassword: '',
     role: 'guest', 
+    limit: '',
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [apiStatus, setApiStatus] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
+  const [roleFocused, setRoleFocused] = useState(false);
 
   const { setAccessToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  const roleRef = useRef(null);
 
   async function login() {
     try {
@@ -74,35 +79,32 @@ export default function LoginSection({ onSuccess }) {
       const getUser=await api('user-details','GET');
       if(getUser.status && (getUser.user.role=='admin' || getUser.user.role=='Admin')){
         console.log("Admin creating a account");
-          const result = await api('signup', 'POST', {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-            role: formData.role,
-            rememberMe,
-          });
+        const result = await api('signup', 'POST', {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+          limit: formData.limit,
+          rememberMe,
+        });
 
-          if (result.status) {
-            // setAccessToken(result.access);
-            setApiStatus(true);
-            setShowPopup(true);
-            setTimeout(() => {
-              setShowPopup(false);
-              // if (onSuccess) onSuccess();
-              // navigate('/');
-            }, 2500);
-          } else {
-            setApiStatus(false);
-            setShowPopup(true);
-            setTimeout(() => setShowPopup(false), 2500);
-          }
+        if (result.status) {
+          setApiStatus(true);
+          setShowPopup(true);
+          setTimeout(() => {
+            setShowPopup(false);
+          }, 2500);
+        } else {
+          setApiStatus(false);
+          setShowPopup(true);
+          setTimeout(() => setShowPopup(false), 2500);
+        }
       }
       else{
         alert("You are not allowed to create an user")
       }
-
     } catch {
       setApiStatus(false);
       setShowPopup(true);
@@ -139,6 +141,19 @@ export default function LoginSection({ onSuccess }) {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleRoleClick = () => {
+    setRoleFocused(true);
+    roleRef.current?.focus();
+  };
+
+  const handleRoleFocus = () => {
+    setRoleFocused(true);
+  };
+
+  const handleRoleBlur = () => {
+    setTimeout(() => setRoleFocused(false), 150);
   };
 
   const handleSubmit = async (e) => {
@@ -226,7 +241,7 @@ export default function LoginSection({ onSuccess }) {
                           value={formData.firstName}
                           onChange={handleChange}
                           placeholder="First Name"
-                          className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-12 border-gray-300 focus:border-black focus:ring-black"
                           required
                         />
                       </div>
@@ -240,7 +255,7 @@ export default function LoginSection({ onSuccess }) {
                           value={formData.lastName}
                           onChange={handleChange}
                           placeholder="Last Name"
-                          className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-12 border-gray-300 focus:border-black focus:ring-black"
                           required
                         />
                       </div>
@@ -257,41 +272,84 @@ export default function LoginSection({ onSuccess }) {
                           value={formData.username}
                           onChange={handleChange}
                           placeholder="Choose a username"
-                          className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="pl-10 h-12 border-gray-300 focus:border-black focus:ring-black"
                           required
                         />
                       </div>
                     </div>
 
-                    {/* Role Dropdown - UPDATED */}
+                    {/* Role Dropdown - DROPDOWN ITEMS PADDED RIGHT */}
                     <div className="space-y-2">
                       <Label htmlFor="role" className="text-gray-700">
                         Role
                       </Label>
                       <div className="relative">
                         <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                        <div 
+                          ref={roleRef}
+                          className={`pl-10 pr-10 h-12 flex items-center bg-white cursor-pointer transition-all duration-200 border rounded-lg hover:border-gray-400 ${
+                            roleFocused 
+                              ? 'border-black ring-2 ring-black ring-opacity-30 shadow-md' 
+                              : 'border-gray-300'
+                          }`}
+                          onClick={handleRoleClick}
+                          onFocus={handleRoleFocus}
+                          onBlur={handleRoleBlur}
+                          tabIndex={0}
+                          role="button"
+                        >
+                          <span className={`flex-1 text-sm font-medium transition-colors ${
+                            roleFocused ? 'text-gray-900' : 'text-gray-500'
+                          }`}>
+                            {formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
+                          </span>
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
+                            roleFocused ? 'rotate-180 text-black' : 'text-gray-400'
+                          }`} />
+                        </div>
                         <select
                           id="role"
                           value={formData.role}
                           onChange={handleChange}
-                          className="w-full h-12 pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer transition-colors"
+                          onFocus={handleRoleFocus}
+                          onBlur={handleRoleBlur}
+                          className="absolute inset-0 w-full h-full pl-12 pr-12 opacity-0 cursor-pointer z-20 rounded-lg"
+                          style={{ 
+                            appearance: 'none',
+                            paddingLeft: '2.5rem',
+                            paddingRight: '2.5rem'
+                          }}
                           required
                         >
-                          <option value="guest">Guest</option>
-                          <option value="researcher">Researcher</option>
-                          <option value="auditor">Auditor</option>
-                          <option value="admin">Admin</option>
+                          <option value="guest" style={{ paddingLeft: '2.5rem' }}>Guest</option>
+                          <option value="researcher" style={{ paddingLeft: '2.5rem' }}>Researcher</option>
+                          <option value="auditor" style={{ paddingLeft: '2.5rem' }}>Auditor</option>
+                          <option value="admin" style={{ paddingLeft: '2.5rem' }}>Admin</option>
                         </select>
-                        <svg
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
                       </div>
                     </div>
+
+                    {/* Limit Field - Only for Guest */}
+                    {formData.role === 'guest' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="limit" className="text-gray-700">
+                          Limit
+                        </Label>
+                        <div className="relative">
+                          <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <Input
+                            id="limit"
+                            type="number"
+                            min="1"
+                            value={formData.limit}
+                            onChange={handleChange}
+                            placeholder="Enter limit number"
+                            className="pl-10 h-12 border-gray-300 focus:border-black focus:ring-black"
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -308,7 +366,7 @@ export default function LoginSection({ onSuccess }) {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="Enter your email"
-                      className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="pl-10 h-12 border-gray-300 focus:border-black focus:ring-black"
                       required
                     />
                   </div>
@@ -328,7 +386,7 @@ export default function LoginSection({ onSuccess }) {
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="Enter your password"
-                        className="pl-10 pr-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        className="pl-10 pr-10 h-12 border-gray-300 focus:border-black focus:ring-black"
                         required
                       />
                       <button
@@ -357,7 +415,7 @@ export default function LoginSection({ onSuccess }) {
                           value={formData.password}
                           onChange={handleChange}
                           placeholder="Enter new password"
-                          className="pl-10 pr-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="pl-10 pr-10 h-12 border-gray-300 focus:border-black focus:ring-black"
                           required
                         />
                         <button
@@ -381,7 +439,7 @@ export default function LoginSection({ onSuccess }) {
                           value={formData.confirmPassword}
                           onChange={handleChange}
                           placeholder="Confirm your new password"
-                          className="pl-10 pr-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="pl-10 pr-10 h-12 border-gray-300 focus:border-black focus:ring-black"
                           required
                         />
                         <button
@@ -395,30 +453,6 @@ export default function LoginSection({ onSuccess }) {
                     </div>
                   </>
                 )}
-
-                {/* Remember Me + Forgot Password */}
-                {/* {!isForgotPassword && (
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-600">Remember me</span>
-                    </label>
-                    {!isSignUp && (
-                      <button
-                        type="button"
-                        onClick={() => setIsForgotPassword(true)}
-                        className="text-sm text-blue-600 hover:text-blue-700"
-                      >
-                        Forgot password?
-                      </button>
-                    )}
-                  </div>
-                )} */}
 
                 {/* Remember Me + Forgot Password */}
                 {!isForgotPassword && !isSignUp && (
@@ -442,7 +476,6 @@ export default function LoginSection({ onSuccess }) {
                     </button>
                   </div>
                 )}
-
 
                 <Button
                   type="submit"
