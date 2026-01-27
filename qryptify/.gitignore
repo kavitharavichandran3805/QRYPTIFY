@@ -1,4 +1,68 @@
-large_encrypted_dataset/
+# -------------------------
+# Python / Django
+# -------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+.venv/
+venv/
+env/
+
+db.sqlite3
+*.log
+
+# -------------------------
+# Django static / media
+# -------------------------
+staticfiles/
+media/
+
+# -------------------------
+# Node / Frontend (Vite / React)
+# -------------------------
+node_modules/
+dist/
+build/
+
+# -------------------------
+# Environment variables
+# -------------------------
+.env
+.env.*
+!.env.example
+
+# -------------------------
+# Large datasets / ML files
+# -------------------------
+datasets/
 large_datasets/
-datasets/sample_models
-qryptify/my-app/.env
+large_encrypted_dataset/
+
+# -------------------------
+# Cryptography / Keys (CRITICAL)
+# -------------------------
+*.pem
+*.key
+*.crt
+
+# -------------------------
+# IDE / OS
+# -------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Testing / coverage
+# -------------------------
+.coverage
+htmlcov/
+
+# -------------------------
+# Misc
+# -------------------------
+*.tmp
+*.swp
