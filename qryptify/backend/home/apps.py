@@ -7,14 +7,20 @@ class HomeConfig(AppConfig):
     name = 'home'
 
     def ready(self):
-        if 'migrate' in sys.argv or 'makemigrations' in sys.argv:
-            return
-        User=get_user_model()
+        # if 'migrate' in sys.argv or 'makemigrations' in sys.argv:
+        #     return
+        # User=get_user_model()
 
-        if not User.objects.filter(role='admin').exists():
-            User.objects.create_superuser(
-                username="kavitha3805",
-                email="kavitharavichandran3805@gmail.com",
-                password="kavitha",
-                role="admin"
-            )
+        # if not User.objects.filter(role='admin').exists():
+        #     User.objects.create_superuser(
+        #         username="kavitha3805",
+        #         email="kavitharavichandran3805@gmail.com",
+        #         password="kavitha",
+        #         role="admin"
+        #     )
+        try:
+            import home.signals
+        except ImportError:
+            # This might happen during initial setup or tests
+            pass
+        
