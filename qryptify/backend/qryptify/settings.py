@@ -286,8 +286,14 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
-
+ALLOWED_HOSTS = [
+    'qryptify.onrender.com',
+    'https://qryptify.onrender.com',
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+    '.onrender.com',  # Allows ALL *.onrender.com subdomains
+]
 # --------------------------------------------------
 # Application definition
 # --------------------------------------------------
