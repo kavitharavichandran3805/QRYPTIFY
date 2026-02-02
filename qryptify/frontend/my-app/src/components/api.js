@@ -122,7 +122,7 @@ import { getCookie } from "./cookies";
 import { jwtDecode } from "jwt-decode";
 
 // Get the base URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 
 // Helper function to get full URL
 function getFullUrl(endpoint) {
