@@ -266,6 +266,182 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 Django settings for qryptify project.
 """
 
+# from pathlib import Path
+# from datetime import timedelta
+# import os
+# from dotenv import load_dotenv
+
+# # Load .env file
+# load_dotenv()
+
+# # --------------------------------------------------
+# # Base directory
+# # --------------------------------------------------
+# BASE_DIR = Path(__file__).resolve().parent.parent
+
+# # --------------------------------------------------
+# # Security
+# # --------------------------------------------------
+# SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+
+# DEBUG = os.getenv("DEBUG", "True") == "True"
+
+# ALLOWED_HOSTS = [
+#     'qryptify.onrender.com',
+#     'https://qryptify.onrender.com',
+#     'localhost',
+#     '127.0.0.1',
+#     '0.0.0.0',
+#     '.onrender.com',  # Allows ALL *.onrender.com subdomains
+# ]
+# # --------------------------------------------------
+# # Application definition
+# # --------------------------------------------------
+# INSTALLED_APPS = [
+#     'corsheaders',
+#     'django.contrib.admin',
+#     'django.contrib.auth',
+#     'django.contrib.contenttypes',
+#     'django.contrib.sessions',
+#     'django.contrib.messages',
+#     'django.contrib.staticfiles',
+
+#     'rest_framework',
+#     'rest_framework_simplejwt',
+#     'rest_framework_simplejwt.token_blacklist',
+
+#     'home.apps.HomeConfig',
+#     'api',
+# ]
+
+# MIDDLEWARE = [
+#     'corsheaders.middleware.CorsMiddleware',
+#     'django.middleware.security.SecurityMiddleware',
+#     'django.contrib.sessions.middleware.SessionMiddleware',
+#     'django.middleware.common.CommonMiddleware',
+#     'django.middleware.csrf.CsrfViewMiddleware',
+#     'django.contrib.auth.middleware.AuthenticationMiddleware',
+#     'django.contrib.messages.middleware.MessageMiddleware',
+#     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+# ]
+
+# ROOT_URLCONF = 'qryptify.urls'
+
+# TEMPLATES = [
+#     {
+#         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+#         'DIRS': [],
+#         'APP_DIRS': True,
+#         'OPTIONS': {
+#             'context_processors': [
+#                 'django.template.context_processors.request',
+#                 'django.contrib.auth.context_processors.auth',
+#                 'django.contrib.messages.context_processors.messages',
+#             ],
+#         },
+#     },
+# ]
+
+# WSGI_APPLICATION = 'qryptify.wsgi.application'
+
+# # --------------------------------------------------
+# # Database
+# # --------------------------------------------------
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+# # --------------------------------------------------
+# # Authentication
+# # --------------------------------------------------
+# AUTH_USER_MODEL = "home.User"
+
+# AUTH_PASSWORD_VALIDATORS = [
+#     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+#     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+#     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+#     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+# ]
+
+# # --------------------------------------------------
+# # REST + JWT
+# # --------------------------------------------------
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#         'rest_framework.authentication.SessionAuthentication',
+#     ),
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticated',
+#     ],
+# }
+
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+#     'AUTH_HEADER_TYPES': ('Bearer',),
+# }
+
+# # --------------------------------------------------
+# # CORS / CSRF (development)
+# # --------------------------------------------------
+# # CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOWED_ORIGINS = [
+#     "https://qryptify.vercel.app/",
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+# ]
+
+# CORS_ALLOW_CREDENTIALS = True
+
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+# ]
+
+# SESSION_COOKIE_SAMESITE = 'Lax'
+# SESSION_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_SAMESITE = 'Lax'
+
+# # --------------------------------------------------
+# # Internationalization
+# # --------------------------------------------------
+# LANGUAGE_CODE = 'en-us'
+# TIME_ZONE = 'UTC'
+# USE_I18N = True
+# USE_TZ = True
+
+# # --------------------------------------------------
+# # Static & Media
+# # --------------------------------------------------
+# STATIC_URL = '/static/'
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
+
+# # --------------------------------------------------
+# # Email configuration
+# # --------------------------------------------------
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+
+# EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+# EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+# DEFAULT_TO_EMAIL1 = os.getenv("DEFAULT_TO_EMAIL1")
+# DEFAULT_TO_EMAIL2 = os.getenv("DEFAULT_TO_EMAIL2")
+# DEFAULT_TO_EMAIL3 = os.getenv("DEFAULT_TO_EMAIL3")
+
+# # --------------------------------------------------
+# # Default primary key
+# # --------------------------------------------------
+# DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 from pathlib import Path
 from datetime import timedelta
 import os
@@ -288,12 +464,12 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [
     'qryptify.onrender.com',
-    'https://qryptify.onrender.com',
     'localhost',
     '127.0.0.1',
     '0.0.0.0',
-    '.onrender.com',  # Allows ALL *.onrender.com subdomains
+    '.onrender.com',
 ]
+
 # --------------------------------------------------
 # Application definition
 # --------------------------------------------------
@@ -315,7 +491,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Must be at the top
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -382,23 +558,69 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 # --------------------------------------------------
-# CORS / CSRF (development)
+# CORS / CSRF
 # --------------------------------------------------
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Development vs Production CORS settings
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "https://qryptify.vercel.app",
+    ]
+    CSRF_TRUSTED_ORIGINS = [
+        "https://qryptify.onrender.com",
+        "https://qryptify.vercel.app",
+    ]
+
 SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_HTTPONLY = True
+
+# Production security settings
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # --------------------------------------------------
 # Internationalization
