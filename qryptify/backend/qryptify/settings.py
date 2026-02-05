@@ -918,9 +918,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # --------------------------------------------------
 # FINAL DEBUG OUTPUT
 # --------------------------------------------------
-print("=" * 50)
-print(f"✅ ENVIRONMENT: {'PRODUCTION (Render)' if IS_RENDER else 'DEVELOPMENT (Local)'}")
-print(f"✅ DEBUG: {DEBUG}")
-print(f"✅ DATABASE: {DATABASES['default']['ENGINE']}")
-print(f"✅ ALLOWED_HOSTS: {ALLOWED_HOSTS}")
-print("=" * 50)
+# print("=" * 50)
+# print(f"✅ ENVIRONMENT: {'PRODUCTION (Render)' if IS_RENDER else 'DEVELOPMENT (Local)'}")
+# print(f"✅ DEBUG: {DEBUG}")
+# print(f"✅ DATABASE: {DATABASES['default']['ENGINE']}")
+# print(f"✅ ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+# print("=" * 50)
