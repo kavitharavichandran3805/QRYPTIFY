@@ -7,7 +7,8 @@ from home.views import (
     EmailAPI,UpdateUserDetailsAPI,
     AnalyzeUserInputAPI,
     ResetPasswordAPI,
-    DeleteAccountUserAPI
+    DeleteAccountUserAPI,
+    GetAccessTokenAPI,
     )
 
 
@@ -23,5 +24,6 @@ urlpatterns=[
     path('update-profile/',UpdateUserDetailsAPI.as_view()),
     path('analyze-input-file/',AnalyzeUserInputAPI.as_view()),
     path('reset-password/',ResetPasswordAPI.as_view()),
-    path('user-account-delete/',DeleteAccountUserAPI.as_view())
+    path('user-account-delete/',DeleteAccountUserAPI.as_view()),
+     path('get-access-token/', GetAccessTokenAPI.as_view(), name='get-access-token'),
 ]

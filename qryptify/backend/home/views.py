@@ -134,6 +134,99 @@ class ResetPasswordAPI(APIView):
 
 
 
+# class LoginAPI(APIView):
+#     permission_classes = [AllowAny]
+    
+#     def get(self, request):
+#         users_obj = User.objects.all()
+#         if not users_obj.exists():
+#             return Response({"status": False, "message": "No user exists"}, status=status.HTTP_404_NOT_FOUND)
+#         serializers = UserSerializer(users_obj, many=True)
+#         return Response({"status": True, "data": serializers.data}, status=status.HTTP_200_OK)
+
+#     def post(self, request):
+#         data = request.data
+#         email = data.get('email')
+#         password = data.get('password')
+#         remember_me = data.get('rememberMe', False)
+
+#         if not email or not password:
+#             return Response(
+#                 {"status": False, "message": "Email and password are required"},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+        
+#         try:
+#             user = User.objects.get(email=email)
+#         except User.DoesNotExist:
+#             return Response({"status": False, "message": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        
+#         user = authenticate(username=user.username, password=password)
+#         if not user:
+#             return Response({"status": False, "message": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+#         # ← ADD THIS: Update last_login manually for JWT
+#         user.last_login = timezone.now()
+#         user.save(update_fields=['last_login'])
+
+#         refresh_token = RefreshToken.for_user(user)
+#         access_token = str(refresh_token.access_token)
+        
+#         if remember_me:
+#             print("remember me is checked")
+#         else:
+#             print("remember me is not checked")
+
+#         cookie_max_age = 7 * 24 * 60 * 60 if remember_me else 2*24 * 60 * 60
+
+#         res = Response({
+#             "status": True,
+#             "message": "Successfully logged in",
+#             "access": access_token
+#         }, status=status.HTTP_200_OK)
+#         res.set_cookie(
+#             key='refresh',
+#             value=str(refresh_token),
+#             httponly=True,
+#             secure=False,
+#             samesite="Lax",
+#             max_age=cookie_max_age
+#         )
+#         return res
+
+#     def patch(self, request):
+#         data = request.data
+#         email = data.get('email')
+
+#         try:
+#             obj = User.objects.get(email=email)
+#         except User.DoesNotExist:
+#             return Response({"status": False, "message": "No user exists"}, status=status.HTTP_404_NOT_FOUND)
+
+#         new_password = data.get('newPassword')
+#         confirm_password = data.get('confirmPassword')
+
+#         if new_password:
+#             if new_password != confirm_password:
+#                 return Response({"status": False, "message": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+#             obj.set_password(new_password)
+#             obj.save()
+#             return Response({"status": True, "message": "Password updated successfully"})
+
+#         serializer = UserSerializer(obj, data=data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response({"status": True, "message": "Successfully updated"})
+#         return Response({"status": False, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+#     def delete(self, request):
+#         data = request.data
+#         email = data.get('email')
+#         user = User.objects.filter(email=email)
+#         user.delete()
+#         return Response({"status": True, "message": "Successfully deleted"})
+    
+
 class LoginAPI(APIView):
     permission_classes = [AllowAny]
     
@@ -165,7 +258,7 @@ class LoginAPI(APIView):
         if not user:
             return Response({"status": False, "message": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # ← ADD THIS: Update last_login manually for JWT
+        # Update last_login manually for JWT
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
 
@@ -177,21 +270,39 @@ class LoginAPI(APIView):
         else:
             print("remember me is not checked")
 
-        cookie_max_age = 7 * 24 * 60 * 60 if remember_me else 2*24 * 60 * 60
+        # Set cookie ages based on remember_me
+        access_cookie_max_age = 7 * 24 * 60 * 60 if remember_me else 2 * 24 * 60 * 60  # 7 days or 2 days
+        refresh_cookie_max_age = 30 * 24 * 60 * 60 if remember_me else 7 * 24 * 60 * 60  # 30 days or 7 days
 
+        # Create response
         res = Response({
             "status": True,
             "message": "Successfully logged in",
-            "access": access_token
+            "access": access_token  # Still return for backward compatibility
         }, status=status.HTTP_200_OK)
+        
+        # ✅ ADD ACCESS TOKEN COOKIE (HttpOnly)
+        res.set_cookie(
+            key='access',
+            value=access_token,
+            httponly=True,
+            secure=not settings.DEBUG,  # Secure=True in production, False in dev
+            samesite="Lax",
+            max_age=access_cookie_max_age,
+            path='/'
+        )
+        
+        # ✅ REFRESH TOKEN COOKIE (HttpOnly)
         res.set_cookie(
             key='refresh',
             value=str(refresh_token),
             httponly=True,
-            secure=False,
+            secure=not settings.DEBUG,
             samesite="Lax",
-            max_age=cookie_max_age
+            max_age=refresh_cookie_max_age,
+            path='/'
         )
+        
         return res
 
     def patch(self, request):
@@ -225,7 +336,19 @@ class LoginAPI(APIView):
         user = User.objects.filter(email=email)
         user.delete()
         return Response({"status": True, "message": "Successfully deleted"})
+# class DeleteAccountUserAPI(APIView):
+#     permission_classes = [IsAuthenticated]
     
+#     def delete(self, request):
+#         user = request.user
+#         try:
+#             user.delete()
+#             res = Response({"status": True, "message": "Account successfully deleted"})
+#             res.delete_cookie('refresh')
+#             return res
+#         except Exception as e:
+#             return Response({"status": False, "message": str(e)}, status=400)
+
 class DeleteAccountUserAPI(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -234,10 +357,33 @@ class DeleteAccountUserAPI(APIView):
         try:
             user.delete()
             res = Response({"status": True, "message": "Account successfully deleted"})
-            res.delete_cookie('refresh')
+            # ✅ Delete BOTH cookies
+            res.delete_cookie('access', path='/')
+            res.delete_cookie('refresh', path='/')
             return res
         except Exception as e:
             return Response({"status": False, "message": str(e)}, status=400)
+    
+# Add this new view to your views.py
+class GetAccessTokenAPI(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        """Get access token from cookies (for frontend backward compatibility)"""
+        access_token = request.COOKIES.get('access')
+        
+        if access_token:
+            return Response({
+                "status": True,
+                "access": access_token
+            })
+        
+        return Response({
+            "status": False,
+            "message": "No access token found"
+        }, status=401)
+
+
 class SignupAPI(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -258,13 +404,24 @@ class SignupAPI(APIView):
             )
 
 
+# class LogoutAPI(APIView):
+#     permission_classes = [IsAuthenticated]
+    
+#     def get(self, request):
+#         print(request.user)
+#         res = Response({"status": True, "message": "Successfully logged out"})
+#         res.delete_cookie('refresh')
+#         return res
+
 class LogoutAPI(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
         print(request.user)
         res = Response({"status": True, "message": "Successfully logged out"})
-        res.delete_cookie('refresh')
+        # ✅ Delete BOTH cookies
+        res.delete_cookie('access', path='/')
+        res.delete_cookie('refresh', path='/')
         return res
 
 
@@ -298,6 +455,22 @@ class UserDetailsAPI(APIView):
             return Response({"status": False, "message": "Invalid refresh"}, status=401)
 
 
+# class RefreshTokenAPI(APIView):
+#     permission_classes = [AllowAny]
+
+#     def get(self, request):
+#         refresh = request.COOKIES.get('refresh')
+#         if not refresh:
+#             return Response({"status": False, "message": "Refresh token expired"},
+#                             status=status.HTTP_401_UNAUTHORIZED)
+#         try:
+#             refresh_token = RefreshToken(refresh)
+#             new_access = str(refresh_token.access_token) 
+#             return Response({"status": True, "access": new_access})
+#         except TokenError:
+#             return Response({"status": False, "message": "Token error occurred"},
+#                             status=status.HTTP_401_UNAUTHORIZED)
+
 class RefreshTokenAPI(APIView):
     permission_classes = [AllowAny]
 
@@ -308,8 +481,23 @@ class RefreshTokenAPI(APIView):
                             status=status.HTTP_401_UNAUTHORIZED)
         try:
             refresh_token = RefreshToken(refresh)
-            new_access = str(refresh_token.access_token) 
-            return Response({"status": True, "access": new_access})
+            new_access = str(refresh_token.access_token)
+            
+            # ✅ Create response
+            res = Response({"status": True, "access": new_access})
+            
+            # ✅ Update access token cookie
+            res.set_cookie(
+                key='access',
+                value=new_access,
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite="Lax",
+                max_age=2 * 24 * 60 * 60,  # 2 days
+                path='/'
+            )
+            
+            return res
         except TokenError:
             return Response({"status": False, "message": "Token error occurred"},
                             status=status.HTTP_401_UNAUTHORIZED)

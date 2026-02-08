@@ -859,10 +859,16 @@ if IS_RENDER:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token
+    CSRF_USE_SESSIONS = False
     
     print("🔒 Production security settings enabled")
 else:
     # DEVELOPMENT: Allow all for local testing
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_HTTPONLY = False
     CORS_ALLOW_ALL_ORIGINS = True
     CSRF_TRUSTED_ORIGINS = [
         "http://localhost:3000",
@@ -871,6 +877,7 @@ else:
         "http://127.0.0.1:5173",
     ]
     print("🔓 Development CORS: All origins allowed")
+
 
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
