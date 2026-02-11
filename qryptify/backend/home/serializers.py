@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from home.models import User
+from home.models import User,AuditLog
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, write_only=True)  
@@ -58,8 +58,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)  
-        
-        # Get NEW role from request (not old instance.role)
         new_role = validated_data.get('role', instance.role)
         
         instance.first_name = validated_data.get('first_name', instance.first_name)
@@ -68,7 +66,6 @@ class UserSerializer(serializers.ModelSerializer):
         instance.phone = validated_data.get('phone', instance.phone)
         instance.role = new_role
         
-        # Use NEW role for limit logic
         if new_role == 'guest':
             instance.limit = validated_data.get('limit', instance.limit)
         else:
@@ -81,3 +78,13 @@ class UserSerializer(serializers.ModelSerializer):
             instance.save()
         
         return instance
+    
+class AuditLogSerializer(serializers.ModelSerializer):
+    actor=UserSerializer(read_only=True)
+    target_user=UserSerializer(read_only=True)
+    class Meta:
+        model=AuditLog
+        fields='__all__'
+    
+
+

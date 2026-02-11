@@ -18,3 +18,21 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.role})"
+
+
+class AuditLog(models.Model):
+    ACTION_CHOICES = [
+        ('LOGIN', 'Login'),
+        ('LOGOUT', 'Logout'),
+        ('CREATE', 'Create'),
+        ('UPDATE', 'Update'),
+        ('DELETE', 'Delete'),
+    ]
+    actor=models.ForeignKey(User,related_name='performed_actions',on_delete=models.SET_NULL,null=True)
+    target_user=models.ForeignKey(User,related_name='affected_by',on_delete=models.SET_NULL,null=True, blank=True)
+    action=models.CharField(max_length=20,choices=ACTION_CHOICES)
+    message=models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.message
+    

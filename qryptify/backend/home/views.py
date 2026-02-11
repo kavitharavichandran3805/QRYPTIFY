@@ -7,9 +7,10 @@ import binascii
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from home.models import User  
+from home.models import User, AuditLog
+from home.audits import audit_logs
 from qryptify.settings import DEFAULT_TO_EMAIL1, DEFAULT_TO_EMAIL2, DEFAULT_TO_EMAIL3
-from .serializers import UserSerializer
+from .serializers import UserSerializer, AuditLogSerializer
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
@@ -31,6 +32,17 @@ from django.contrib.auth import update_session_auth_hash
 def get_csrf_token(request):
     print("inside the get_csrf_token")
     return JsonResponse({"token": get_token(request)}) 
+
+class GetLogsAPI(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        logs = AuditLog.objects.all()
+        serializer = AuditLogSerializer(logs, many=True)
+        return Response({
+            "status": True, 
+            "log_data": serializer.data
+        })
+    
 
 
 class EmailAPI(APIView):
@@ -82,6 +94,11 @@ class UpdateUserDetailsAPI(APIView):
         )
         if serializers.is_valid():
             serializers.save()
+            audit_logs(
+                actor=request.user,
+                action='UPDATE',
+                message=f"{request.user.username} updated profile details"
+            )
             return Response({"status":True,"message":"Profile successfully updated"})
         return Response({"status":False,"message":"Error in updating the profile"})
 
@@ -302,6 +319,12 @@ class LoginAPI(APIView):
             max_age=refresh_cookie_max_age,
             path='/'
         )
+
+        audit_logs(
+                actor=user,
+                action='LOGIN',
+                message=f"{user.username} logged in"
+            )
         
         return res
 
@@ -360,6 +383,11 @@ class DeleteAccountUserAPI(APIView):
             # ✅ Delete BOTH cookies
             res.delete_cookie('access', path='/')
             res.delete_cookie('refresh', path='/')
+            audit_logs(
+                actor=request.user,
+                action='DELETE',
+                message=f"{request.user.username} updated profile details"
+            )
             return res
         except Exception as e:
             return Response({"status": False, "message": str(e)}, status=400)
@@ -398,6 +426,12 @@ class SignupAPI(APIView):
             )
         user = serializer.save()
         print('user details created')
+        audit_logs(
+                actor=request.user,
+                action='CREATE',
+                target_user=user,
+                message=f"{request.user.username} created {user.username}"
+            )
         return Response(
                 {"status": True, "message": "User created successfully"},
                 status=status.HTTP_201_CREATED
@@ -422,6 +456,11 @@ class LogoutAPI(APIView):
         # ✅ Delete BOTH cookies
         res.delete_cookie('access', path='/')
         res.delete_cookie('refresh', path='/')
+        audit_logs(
+                actor=request.user,
+                action='LOGOUT',
+                message=f"{request.user.username} logged out"
+            )
         return res
 
 

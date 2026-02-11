@@ -9,6 +9,7 @@ from home.views import (
     ResetPasswordAPI,
     DeleteAccountUserAPI,
     GetAccessTokenAPI,
+    GetLogsAPI
     )
 
 
@@ -25,5 +26,6 @@ urlpatterns=[
     path('analyze-input-file/',AnalyzeUserInputAPI.as_view()),
     path('reset-password/',ResetPasswordAPI.as_view()),
     path('user-account-delete/',DeleteAccountUserAPI.as_view()),
-     path('get-access-token/', GetAccessTokenAPI.as_view(), name='get-access-token'),
+    path('get-access-token/', GetAccessTokenAPI.as_view(), name='get-access-token'),
+    path('getlogs/',GetLogsAPI.as_view()),
 ]
